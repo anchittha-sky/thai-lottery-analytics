@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thai Lottery Analytics — ต้นแบบหน้าแอป</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A1630;--s1:#12234A;--s2:#182D5A;--line:#263F70;--gold:#E0B654;--text:#FFFFFF;--muted:#A9B6CC;--soft:#D5DCE8;--cold:#8EC1FF}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050D1F;color:var(--text);font-family:'IBM Plex Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--gold);text-decoration:none}
+.app{max-width:440px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:96px;position:relative}
+.num{font-family:'Chakra Petch',sans-serif;font-weight:700;letter-spacing:2px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;gap:10px}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--gold);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Chakra Petch';font-weight:700;font-size:14px;flex:none}
+.pill{font-size:11px;font-weight:600;color:var(--bg);background:var(--muted);border-radius:999px;padding:4px 10px;white-space:nowrap}
+h1{margin:0;font-size:21px}
+h2{margin:0;font-size:16px}
+.sub{font-size:12px;color:var(--muted)}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:14px}
+.px{margin-left:20px;margin-right:20px}
+.mt{margin-top:16px}
+.seg{background:var(--s1);border-radius:14px;padding:4px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.seg button{min-height:44px;border:0;border-radius:10px;font-size:15px;font-weight:600;background:transparent;color:var(--muted)}
+.seg button.on{background:var(--gold);color:var(--bg)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{min-height:36px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:600;background:transparent;color:var(--soft);border:1px solid var(--line)}
+.chips button.on{background:#fff;color:var(--bg);border-color:#fff}
+.tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{min-height:44px;padding:0;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);font-size:14px;font-weight:600;white-space:nowrap}
+.tabs button.on{border-bottom-color:var(--gold);color:#fff}
+.row{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:10px 14px;color:#fff;width:100%;text-align:left;font:inherit;min-height:56px}
+.bar{height:6px;background:var(--bg);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--gold);border-radius:999px}
+.list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.note{background:var(--s2);border-radius:14px;padding:14px;font-size:13px;line-height:1.6;color:var(--soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.badge{font-size:11px;font-weight:600;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.b-has{background:var(--gold);color:var(--bg)}.b-build{background:var(--cold);color:var(--bg)}.b-new{border:1px solid var(--line);color:var(--soft)}
+.heat{display:grid;gap:3px}
+.heat span{border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Chakra Petch';font-size:11px;font-weight:600;height:28px}
+nav.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;display:grid;grid-template-columns:repeat(5,1fr);background:#0D1C3D;border-top:1px solid var(--line);padding:6px 4px calc(10px + env(safe-area-inset-bottom));z-index:5}
+nav.bottom button{background:transparent;border:0;color:var(--muted);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;min-height:48px}
+nav.bottom button.on{color:var(--gold);font-weight:600}
+.back{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:#fff;border-radius:12px}
+dl{margin:0}
+.kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;color:var(--muted);font-weight:500;text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+td{padding:12px 8px;border-bottom:1px solid #1C3260}
+.slider{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.slider:last-child{border-bottom:0}
+input[type=range]{width:100%;accent-color:var(--gold);height:28px}
+.btn{min-height:46px;border-radius:12px;border:0;background:var(--gold);color:var(--bg);font-weight:700;font-size:15px;width:100%}
+.btn.ghost{background:transparent;border:1px dashed var(--gold);color:var(--gold)}
+.ok{color:#7FE0A8}.warn{color:#FFB46B}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<nav class="bottom" id="nav" aria-label="เมนูหลัก"></nav>
+
+<script src="data.js"></script>
+<script src="data4d.js"></script>
+<script>
+// ผลรางวัลย้อนหลัง: ข้อมูลจริงจาก github.com/vicha-w/thai-lotto-archive (ตรวจเทียบกับข่าวผลสลาก)
+// ข้อมูลทั้งหมดอยู่ใน data.js (ระบบเก็บอัตโนมัติอัปเดตไฟล์นั้น) · หน้า Admin ยังเป็นตัวอย่าง
+const DATA = window.TLA_DATA;
+const DRAWS = DATA.draws;
+const NEXT_DRAW_ISO = DATA.nextDraw;
+const NEXT_ISO = NEXT_DRAW_ISO;
+const S = { game:'th', page:'home', digits:'2', group:'stat',showTies:false,openHist:'',btReady:false,period:'10y', list:'hot', popView:'nums', status:'all', mode:'exact', pick:null,
+  w:{y10:15,y15:20,pattern:15,relation:10,source:20,trend:20} };
+
+const POOLS = {
+  '2': [['47',82,74],['19',76,88],['63',88,52],['05',64,91],['28',79,60],['91',71,69],['36',58,84],['70',85,40],['12',62,72],['84',55,78],['59',69,57],['23',50,80],['40',74,45]],
+  '3': [['258',84,77],['731',79,85],['406',90,48],['512',66,90],['889',73,62],['164',81,55],['027',60,82],['395',70,66],['648',57,79],['913',76,50],['570',63,64],['382',52,74]]
+};
+const ICON = {
+  home:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  stat:'<line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/>',
+  pop:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14c2.4.3 4 2.2 4 5"/>',
+  perf:'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+  admin:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  back:'<polyline points="15 18 9 12 15 6"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+};
+const svg = (k,s=22,c='currentColor') => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+
+function set(p){ Object.assign(S,p); render(); if(p.page) window.scrollTo(0,0); }
+function seg(key, opts){ return `<div class="seg">${opts.map(([v,l])=>`<button class="${S[key]===v?'on':''}" onclick="set({${key}:'${v}'})">${l}</button>`).join('')}</div>`; }
+function chips(key, opts){ return `<div class="chips">${opts.map(([v,l])=>`<button class="${S[key]===v?'on':''}" onclick="set({${key}:'${v}'})">${l}</button>`).join('')}</div>`; }
+function tabs(key, opts){ return `<div class="tabs">${opts.map(([v,l])=>`<button class="${S[key]===v?'on':''}" onclick="set({${key}:'${v}'})">${l}</button>`).join('')}</div>`; }
+const DIG = [['2','เลข 2 ตัว'],['3','เลข 3 ตัว']];
+const PER = [['1y','1 ปี'],['5y','5 ปี'],['10y','10 ปี'],['all','ทั้งหมด']];
+const PERNAME = {'1y':'ย้อนหลัง 1 ปี','5y':'ย้อนหลัง 5 ปี','10y':'ย้อนหลัง 10 ปี','all':'ข้อมูลทั้งหมด'};
+
+function weights(){ const w=S.w; const stat=w.y10+w.y15+w.pattern+w.relation; const pop=w.source+w.trend; return {stat,pop,total:stat+pop}; }
+function scored(){
+  const {stat,pop,total}=weights();
+  return POOLS[S.digits].map(([n,st,po])=>({n,st,po,co:Math.round(((st*stat+po*pop)/total)*10)/10}));
+}
+
+function topHeader(title, subtitle){
+  return `<header class="top"><div style="display:flex;align-items:center;gap:10px"><div class="logo">TLA</div><div><div style="font-size:16px;font-weight:700">${title}</div><div class="sub">${subtitle}</div></div></div><span class="pill">ข้อมูลตัวอย่าง</span></header>`;
+}
+
+// ===== ข้อมูลจริง: ผลรางวัลย้อนหลัง (DRAWS = [วันที่, รางวัลที่ 1, เลขท้าย 2 ตัว]) =====
+const TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thDate(s){ const [y,m,d]=s.split('-').map(Number); return d+' '+TH_M[m-1]+' '+(y+543); }
+const ALL = DRAWS.map(([date,first,two])=>({date,first,two,three:first.slice(-3)}));
+const BYDATE = Object.fromEntries(ALL.map(r=>[r.date,r]));
+const LATEST = ALL[ALL.length-1];
+const NEXT_DRAW = (()=>{const [y,m,d]=NEXT_DRAW_ISO.split('-').map(Number);return d+' '+['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'][m-1]+' '+(y+543);})();
+function keyOf(d){ return (d||S.digits)==='2'?'two':'three'; }
+const UNI={};
+function universe(d){ d=d||S.digits; if(UNI[d]) return UNI[d]; const n=d==='2'?100:1000, w=d==='2'?2:3; return UNI[d]=Array.from({length:n},(_,i)=>String(i).padStart(w,'0')); }
+const PERM={};
+function permSet(n){ if(PERM[n]) return PERM[n]; const out=new Set(); const go=(pre,rest)=>{ if(!rest.length){out.add(pre);return;} for(let i=0;i<rest.length;i++) go(pre+rest[i],rest.slice(0,i)+rest.slice(i+1)); }; go('',n); return PERM[n]=out; }
+function periodDraws(){
+  if(S.period==='all') return ALL;
+  const yrs={'1y':1,'5y':5,'10y':10}[S.period];
+  const [y,m,d]=LATEST.date.split('-').map(Number);
+  const cut=String(y-yrs)+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  return ALL.filter(r=>r.date>cut);
+}
+const pct=v=>(Math.round(v*1000)/10).toFixed(1)+'%';
+
+// ===== สูตรคะแนนสถิติ 4 ปัจจัย (แยกเลข 2 ตัว / 3 ตัว) =====
+// 1) สถิติระยะยาว: ความถี่ใน 240 งวดล่าสุด (≈10 ปี)  2) สถิติระยะกลาง: ความถี่ใน 120 งวดล่าสุด (≈5 ปี)
+// 3) รูปแบบตัวเลข: กลุ่มลักษณะของเลข (มีเลขซ้ำ / ผลรวมหลัก / คู่-คี่ / สูง-ต่ำ) ออกบ่อยกว่าที่ควรเป็นแค่ไหน
+// 4) ความสัมพันธ์ระหว่างรางวัล: เลขที่มีตัวเลขซ้ำกับงวดล่าสุด × อัตราที่ตัวเลขเคยซ้ำงวดก่อนจริงเทียบกับค่าที่ควรเป็น
+// ทุกปัจจัยปรับเป็น 0–100 แล้วรวมตามน้ำหนักที่ Admin ตั้ง
+const FEATS=[n=>new Set(n).size<n.length?'r':'u', n=>[...n].reduce((a,d)=>a+(+d),0)%10, n=>[...n].map(d=>d%2).join(''), n=>[...n].map(d=>+d>=5?1:0).join('')];
+const SHARE={};
+function shareFrac(prev,d){ const key=d+[...new Set(prev)].sort().join(''); if(SHARE[key]!==undefined) return SHARE[key]; const ps=new Set(prev); const U=universe(d); return SHARE[key]=U.filter(u=>[...u].some(c=>ps.has(c))).length/U.length; }
+function minmax(o,U){ const v=U.map(n=>o[n]); const mn=Math.min(...v), mx=Math.max(...v); const r={}; U.forEach(n=>r[n]=mx===mn?50:(o[n]-mn)/(mx-mn)*100); return r; }
+function statScores(seq,d){
+  const U=universe(d), w=S.w;
+  const freq=(win)=>{ const c={}; U.forEach(n=>c[n]=0); seq.slice(-win).forEach(v=>c[v]++); const m=Math.max(...U.map(n=>c[n]))||1; const o={}; U.forEach(n=>o[n]=c[n]/m*100); return {o,c}; };
+  const L=freq(240), M=freq(120);
+  const win=seq.slice(-240);
+  const pr={}; U.forEach(n=>pr[n]=0);
+  FEATS.forEach(f=>{ const size={},obs={}; U.forEach(n=>{const k=f(n);size[k]=(size[k]||0)+1;}); win.forEach(v=>{const k=f(v);obs[k]=(obs[k]||0)+1;});
+    U.forEach(n=>{const k=f(n); pr[n]+=(((obs[k]||0)/win.length)/(size[k]/U.length))/FEATS.length;}); });
+  const pat=minmax(pr,U);
+  let ob=0, ex=0;
+  for(let i=1;i<win.length;i++){ const ps=new Set(win[i-1]); if([...win[i]].some(c=>ps.has(c))) ob++; ex+=shareFrac(win[i-1],d); }
+  const lift = ex? ob/ex : 1;
+  const prev=seq[seq.length-1]; const ps=new Set(prev);
+  const rr={}; U.forEach(n=>rr[n]=new Set([...n].filter(c=>ps.has(c))).size*lift);
+  const rmax=Math.max(...U.map(n=>rr[n]))||1; const rel={}; U.forEach(n=>rel[n]=rr[n]/rmax*100);
+  const tw=w.y10+w.y15+w.pattern+w.relation||1;
+  const out={};
+  U.forEach(n=>{ out[n]={ n, score: Math.round((w.y10*L.o[n]+w.y15*M.o[n]+w.pattern*pat[n]+w.relation*rel[n])/tw*10)/10,
+    long:L.o[n], mid:M.o[n], pat:pat[n], rel:rel[n], cLong:L.c[n], cMid:M.c[n] }; });
+  return {rows:out, lift, prev};
+}
+const CACHE={};
+function stats(){
+  const ck=S.digits+S.period+JSON.stringify(S.w); if(CACHE[ck]) return CACHE[ck];
+  const k=keyOf(), P=periodDraws(), U=universe();
+  const cnt={}, lastIdx={};
+  U.forEach(n=>{cnt[n]=0;});
+  P.forEach(r=>{cnt[r[k]]++;});
+  ALL.forEach((r,i)=>{lastIdx[r[k]]=i;});
+  const max=Math.max(...U.map(n=>cnt[n]));
+  const sc=statScores(P.map(r=>r[k]), S.digits);
+  const rows=U.map(n=>{
+    const li=lastIdx[n]; let permCnt=0; const ps=permSet(n); P.forEach(r=>{ if(ps.has(r[k])) permCnt++; });
+    return { n, count:cnt[n], rate:cnt[n]/P.length, permCnt, score: sc.rows[n].score, f: sc.rows[n],
+      last: li===undefined?null:ALL[li].date, gap: li===undefined?null:(ALL.length-1-li) };
+  });
+  return CACHE[ck]={rows,P,max,lift:sc.lift};
+}
+function emptyState(title,msg){ return `<div class="card px" style="margin-top:12px;text-align:center;padding:22px 16px"><div style="font-weight:700;margin-bottom:6px">${title}</div><div class="sub" style="line-height:1.6">${msg}</div></div>`; }
+const REAL_PILL='<span class="pill" style="background:#7FE0A8">ข้อมูลจริง</span>';
+
+// ===== ข้อมูลสำนัก (เก็บจากข่าวที่เผยแพร่ก่อนวันออกรางวัล) — อยู่ใน data.js: tips[ชื่อสำนัก][วันที่]["2"|"3"] =====
+const TIPS = DATA.tips || {};
+const SRC_NAMES = Object.keys(TIPS);
+function sourceRecord(name,d){
+  d=d||'2'; const k=d==='2'?'two':'three'; const T=TIPS[name]||{};
+  const rows=Object.keys(T).sort().filter(dt=>BYDATE[dt] && T[dt][d] && T[dt][d].length).map(dt=>{ const r=BYDATE[dt][k], t=T[dt][d]; const ex=t.includes(r); const pm=ex||t.some(x=>permSet(x).has(r)); return {date:dt,result:r,tips:t,ex,pm}; });
+  const n=rows.length;
+  return {name,rows,n,ex:rows.filter(r=>r.ex).length,pm:rows.filter(r=>r.pm).length,status:n>=24?'มีประวัติ':(n>0?'สะสมประวัติ':'สำนักใหม่')};
+}
+function nextTips(d){ d=d||S.digits; const out=[]; SRC_NAMES.forEach(nm=>{ const t=(TIPS[nm][NEXT_ISO]||{})[d]; if(t&&t.length) out.push({name:nm,tips:[...new Set(t)]}); }); return out; }
+// คะแนนสำนัก = สัดส่วนสำนักที่ให้เลขนั้น (สำนักเดียวกันให้ซ้ำไม่นับเพิ่ม) ปรับเป็น 0–100
+function popularScores(){ const nt=nextTips(); if(!nt.length) return null; const c={}; nt.forEach(s=>s.tips.forEach(n=>{c[n]=(c[n]||0)+1;})); return {n:nt.length, rows:Object.keys(c).map(n=>({n,count:c[n],score:Math.round(c[n]/nt.length*1000)/10, by:nt.filter(s=>s.tips.includes(n)).map(s=>s.name)}))}; }
+const BADGE={'มีประวัติ':'b-has','สะสมประวัติ':'b-build','สำนักใหม่':'b-new'};
+
+function topFor(d){
+  const sv=S.digits; S.digits=d;
+  const st=stats(), ps=popularScores(); let rows, src;
+  if(ps){ const w=S.w, ws=w.y10+w.y15+w.pattern+w.relation, wp=w.source; const pm=Object.fromEntries(ps.rows.map(r=>[r.n,r.score]));
+    rows=st.rows.map(r=>({n:r.n,v:Math.round((r.score*ws+(pm[r.n]||0)*wp)/(ws+wp)*10)/10})); src='รวมสถิติ + สำนัก'; }
+  else { rows=st.rows.map(r=>({n:r.n,v:r.score})); src='จากสถิติ (เลขสำนักยังไม่ออก)'; }
+  rows.sort((a,b)=>b.v-a.v||(a.n<b.n?-1:1)); S.digits=sv; return {top:rows.slice(0,3),src};
+}
+function pageHome(){
+  const st=stats();
+  const head = topHeader('Thai Lottery Analytics','วิเคราะห์สถิติหวยไทย').replace('<span class="pill">ข้อมูลตัวอย่าง</span>',REAL_PILL);
+  let list='';
+  if(S.group==='stat'){
+    const sorted=st.rows.slice().sort((a,b)=>b.score-a.score||b.count-a.count||(a.n<b.n?-1:1));
+    const top=sorted.slice(0,10), cut=top[9].score;
+    const ties=sorted.slice(10).filter(x=>x.score===cut);
+    const show = S.showTies? top.concat(ties): top;
+    list = `<ol class="list px" style="margin-top:12px">${show.map((x,i)=>`
+      <li><button class="row" onclick="set({page:'detail',pick:'${x.n}'})">
+        <span style="width:20px;font-size:13px;color:var(--muted);font-weight:600">${i<10?i+1:'='}</span>
+        <span class="num" style="font-size:26px;width:${S.digits==='3'?64:44}px;color:${i<3?'var(--gold)':'#fff'}">${x.n}</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+          <span style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>ออก ${x.count} ครั้งในช่วงนี้</span><b style="color:#fff">${x.score.toFixed(1)}</b></span>
+          <span class="bar"><i style="width:${x.score}%"></i></span>
+        </span></button></li>`).join('')}</ol>
+      ${ties.length?`<div class="px" style="margin-top:10px"><button class="btn ghost" onclick="set({showTies:${!S.showTies}})">${S.showTies?'ซ่อนเลขคะแนนเท่ากัน':`มีอีก ${ties.length} เลขคะแนนเท่ากับอันดับ 10 — ดูเพิ่ม`}</button></div>`:''}`;
+  } else {
+    const ps=popularScores();
+    if(ps){
+      const st2=Object.fromEntries(st.rows.map(r=>[r.n,r.score]));
+      const w=S.w; const ws=w.y10+w.y15+w.pattern+w.relation, wp=w.source;
+      let rows=ps.rows.map(r=>({...r, st:st2[r.n], co:Math.round(((st2[r.n]||0)*ws+r.score*wp)/(ws+wp)*10)/10}));
+      const key=S.group==='pop'?'score':'co';
+      if(S.group==='combined'){ const have=new Set(rows.map(r=>r.n)); st.rows.forEach(r=>{ if(!have.has(r.n)) rows.push({n:r.n,count:0,score:0,by:[],st:r.score,co:Math.round(r.score*ws/(ws+wp)*10)/10}); }); }
+      rows.sort((a,b)=>b[key]-a[key]||b.st-a.st);
+      const cut=(rows[9]||rows[rows.length-1])[key]; const top=rows.slice(0,10); const ties=rows.slice(10).filter(r=>r[key]===cut);
+      const show=S.showTies?top.concat(ties):top;
+      list=`<ol class="list px" style="margin-top:12px">${show.map((x,i)=>`<li><button class="row" onclick="set({page:'detail',pick:'${x.n}'})">
+        <span style="width:20px;font-size:13px;color:var(--muted);font-weight:600">${i<10?i+1:'='}</span>
+        <span class="num" style="font-size:26px;width:${S.digits==='3'?64:44}px;color:${i<3?'var(--gold)':'#fff'}">${x.n}</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+          <span style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${S.group==='pop'?`${x.count} จาก ${ps.n} สำนัก`:`สถิติ ${(x.st||0).toFixed(0)} · สำนัก ${x.score.toFixed(0)}`}</span><b style="color:#fff">${x[key].toFixed(1)}</b></span>
+          <span class="bar"><i style="width:${x[key]}%"></i></span></span></button></li>`).join('')}</ol>
+        ${ties.length?`<div class="px" style="margin-top:10px"><button class="btn ghost" onclick="set({showTies:${!S.showTies}})">${S.showTies?'ซ่อนเลขคะแนนเท่ากัน':`มีอีก ${ties.length} เลขคะแนนเท่ากับอันดับ 10 — ดูเพิ่ม`}</button></div>`:''}
+        <p class="px sub" style="margin-top:10px">เลขสำนักงวด ${NEXT_DRAW} จาก ${ps.n} สำนัก · คะแนนเหตุการณ์และกระแสยังไม่มีแหล่งข้อมูล</p>`;
+    } else {
+    const rec=sourceRecord('แม่จำเนียร','2');
+    const last=rec.rows[rec.rows.length-1];
+    list = emptyState(`รอเลขสำนักงวด ${NEXT_DRAW}`,`ระบบเก็บเลขอัตโนมัติวันที่ 14–15 และ 30–31 ของทุกเดือน คะแนน${S.group==='pop'?'สำนัก':'รวม'}จะขึ้นเมื่อมีข้อมูล`)+
+      (last?`<div class="card px" style="margin-top:10px"><div class="sub">งวดที่แล้ว (${thDate(last.date)}) แม่จำเนียรให้</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${last.tips.map(t=>`<span class="num" style="font-size:16px;border:1px solid var(--line);border-radius:8px;padding:2px 9px;letter-spacing:1px;${t===last.result?'background:var(--gold);color:var(--bg)':''}">${t}</span>`).join('')}</div>
+        <div class="sub" style="margin-top:8px">ผลจริง <b class="num" style="color:#fff;letter-spacing:1px">${last.result}</b> · ${last.ex?'ถูก':(last.pm?'ถูกแบบกลับ':'ไม่ถูก')}</div>
+        <button class="btn ghost" style="margin-top:12px" onclick="set({page:'pop',popView:'sources'})">ดูประวัติความแม่นของสำนัก</button></div>`:'');
+    }
+  }
+  const info = {combined:['Combined Numbers — Top 10','สถิติ + สำนัก'],stat:['Statistical Numbers — Top 10','สูตร 4 ปัจจัย'],pop:['Popular Numbers — Top 10','จากสำนัก']}[S.group];
+  return head + `
+  <section class="card px" style="border-color:#E0B654">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:14px;font-weight:700;color:var(--gold)">เลขวิเคราะห์งวดนี้</span><b>${NEXT_DRAW}</b></div>
+    <div class="grid2" style="margin-top:12px">
+      ${[['3','เลข 3 ตัว'],['2','เลข 2 ตัว']].map(([d,l])=>{const t=topFor(d);return `<div style="background:var(--bg);border-radius:12px;padding:12px"><div class="sub">${l}</div><div class="num" style="font-size:34px;color:var(--gold);line-height:1.2">${t.top[0].n}</div><div class="sub" style="margin-top:4px">อันดับ 2–3: <b class="num" style="color:#fff;letter-spacing:1px">${t.top[1].n} · ${t.top[2].n}</b></div></div>`;}).join('')}
+    </div>
+    <div class="sub" style="margin-top:10px;line-height:1.6">${topFor('2').src} · ${PERNAME[S.period]} · คะแนนสูงสุดจากสูตร ไม่ใช่โอกาสถูกรางวัล</div>
+  </section>
+  <div class="px mt">${seg('digits',DIG)}</div>
+  <div class="px" style="margin-top:12px">${chips('period',PER)}</div>
+  <div class="px sub" style="margin-top:8px">ช่วงข้อมูลที่ใช้คำนวณ: ${PERNAME[S.period]} · ${st.P.length} งวด · ${thDate(st.P[0].date)} – ${thDate(LATEST.date)}</div>
+  <div class="px mt">${tabs('group',[['stat','สถิติ'],['pop','สำนัก'],['combined','วิเคราะห์รวม']])}</div>
+  <div class="px" style="margin-top:14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>${info[0]}</h2><span class="sub">${info[1]}</span></div>
+  ${list}
+  <div class="note px mt" style="display:flex;gap:10px">${svg('info',20,'#E0B654')}<span>คะแนนเป็นการสรุปข้อมูลย้อนหลัง ไม่ใช่ความน่าจะเป็นในการถูกรางวัล ทุกเลขมีโอกาสออกเท่ากันในแต่ละงวด <a href="#" onclick="set({page:'perf'});return false"><b>ดูผลทดสอบย้อนหลัง</b></a></span></div>`;
+}
+
+function pageDetail(){
+  const st=stats();
+  const x = st.rows.find(i=>i.n===S.pick) || st.rows[0];
+  const sorted=st.rows.slice().sort((a,b)=>b.score-a.score);
+  const rank = sorted.findIndex(i=>i.score===x.score)+1;
+  const tie = st.rows.filter(r=>r.score===x.score).length>1;
+  const ps=[...permSet(x.n)].filter(p=>p!==x.n);
+  return `<header class="top" style="justify-content:flex-start"><button class="back" aria-label="กลับ" onclick="set({page:'home'})">${svg('back')}</button><div><div style="font-size:16px;font-weight:700">ที่มาของคะแนน</div><div class="sub">${S.digits==='2'?'เลข 2 ตัว':'เลข 3 ตัว'} · ${PERNAME[S.period]} (${st.P.length} งวด)</div></div></header>
+  <section class="card px" style="text-align:center;padding:20px">
+    <div class="num" style="font-size:72px;line-height:1;color:var(--gold);letter-spacing:6px">${x.n}</div>
+    <div class="sub" style="margin-top:8px;font-size:13px">คะแนนสถิติ · อันดับ ${rank}${tie?' (คะแนนเท่ากับเลขอื่น)':''}</div>
+    <div class="num" style="font-size:40px">${x.score.toFixed(1)}</div>
+    ${ps.length?`<div class="sub" style="margin-top:6px">${S.digits==='2'?'เลขกลับ':'เลขสลับตำแหน่ง'}: ${ps.join(' · ')}</div>`:''}
+  </section>
+  <div class="px" style="margin-top:18px"><h2>ข้อมูลที่ใช้คำนวณ</h2></div>
+  <dl class="card px" style="margin-top:10px;padding:4px 14px">
+    <div class="kv"><dt>ออกตรงลำดับ</dt><dd>${x.count} ครั้ง / ${st.P.length} งวด</dd></div>
+    <div class="kv"><dt>ออกแบบ${S.digits==='2'?'กลับ':'สลับตำแหน่ง'} (รวมตรงลำดับ)</dt><dd>${x.permCnt} ครั้ง</dd></div>
+    <div class="kv"><dt>ออกครั้งล่าสุด</dt><dd>${x.last?thDate(x.last):'ยังไม่เคยออก'}</dd></div>
+    <div class="kv"><dt>ไม่ปรากฏมาแล้ว</dt><dd>${x.gap===null?'—':x.gap+' งวด'}</dd></div>
+  </dl>
+  ${(()=>{const by=nextTips().filter(s=>s.tips.includes(x.n)).map(s=>s.name);return by.length?`<div class="card px" style="margin-top:12px"><b>สำนักที่ให้เลขนี้ งวด ${NEXT_DRAW}</b><div class="sub" style="margin-top:6px">${by.join(' · ')}</div></div>`:emptyState('สำนักที่ให้เลขนี้','ยังไม่มีสำนักให้เลขนี้ในงวด '+NEXT_DRAW);})()}
+  <p class="px sub" style="margin-top:16px;line-height:1.6">ผลรางวัลตั้งแต่ ${thDate(ALL[0].date)} ถึง ${thDate(LATEST.date)} (${ALL.length} งวด)</p>`;
+}
+
+function pageStat(){
+  const st=stats(), two=S.digits==='2';
+  const shades=['#182D5A','#2E4470','#6B6A5C','#A78B4F','#E0B654'];
+  const D=[...'0123456789'];
+  let heat;
+  if(two){
+    const mx=st.max||1; const lv=c=>c===0?0:Math.min(4,1+Math.floor(c/mx*3.999));
+    const cell=n=>{const c=st.rows[+n].count;const l=lv(c);return `<span title="${n}: ${c} ครั้ง" style="background:${shades[l]};color:${l>=3?'#0A1630':'#D5DCE8'}">${n}</span>`;};
+    heat=`<div class="heat" style="grid-template-columns:16px repeat(10,1fr)"><span></span>${D.map(d=>`<span style="height:16px;color:var(--muted);font-size:10px">${d}</span>`).join('')}
+      ${D.map(t=>`<span style="color:var(--muted);font-size:10px">${t}</span>`+D.map(u=>cell(t+u)).join('')).join('')}</div>`;
+  } else {
+    const pos=[0,1,2].map(p=>{const c=Array(10).fill(0); st.P.forEach(r=>c[+r.three[p]]++); return c;});
+    const mx=Math.max(...pos.flat()), mn=Math.min(...pos.flat());
+    const lv=c=>mx===mn?2:Math.min(4,Math.floor((c-mn)/(mx-mn)*4.999));
+    heat=`<div class="heat" style="grid-template-columns:52px repeat(10,1fr)"><span></span>${D.map(d=>`<span style="height:16px;color:var(--muted);font-size:10px">${d}</span>`).join('')}
+      ${['หลักร้อย','หลักสิบ','หลักหน่วย'].map((l,r)=>`<span style="color:var(--muted);font-size:11px;justify-content:flex-start">${l}</span>`+pos[r].map((c,d)=>{const L=lv(c);return `<span title="${l} เลข ${d}: ${c} ครั้ง" style="height:44px;flex-direction:column;background:${shades[L]};color:${L>=3?'#0A1630':'#D5DCE8'}">${d}<small style="font-size:9px;font-weight:500">${c}</small></span>`;}).join('')).join('')}</div>
+      <p class="sub" style="margin:8px 0 0">ตัวเลขเล็ก = จำนวนครั้งที่ตัวเลขนั้นอยู่ในหลักนั้น</p>`;
+  }
+  const hot=S.list==='hot';
+  let items, never=0;
+  if(hot) items=st.rows.slice().sort((a,b)=>b.count-a.count||((a.gap??1e9)-(b.gap??1e9))).slice(0,5);
+  else { never=st.rows.filter(r=>r.gap===null).length; items=st.rows.filter(r=>r.gap!==null).sort((a,b)=>b.gap-a.gap).slice(0,5); }
+  return `<header class="top"><div><h1>วิเคราะห์สถิติ</h1><div class="sub">Statistical Numbers · จากผลรางวัลย้อนหลัง</div></div>${REAL_PILL}</header>
+  <div class="px" style="margin-top:8px">${seg('digits',DIG)}</div>
+  <div class="px" style="margin-top:12px">${chips('period',PER)}</div>
+  <div class="px sub" style="margin-top:8px">คำนวณจาก ${st.P.length} งวด · ${thDate(st.P[0].date)} – ${thDate(LATEST.date)}</div>
+  <section class="card px mt">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:8px"><h2>Number Heatmap</h2><span class="sub">${two?'แถว = หลักสิบ · คอลัมน์ = หลักหน่วย':'ความถี่ของแต่ละหลัก'}</span></div>
+    ${heat}
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:12px">${two?'ไม่เคยออก':'น้อย'} ${shades.map(c=>`<i style="width:22px;height:10px;border-radius:3px;display:inline-block;background:${c}"></i>`).join('')} มาก</div>
+  </section>
+  <div class="px mt">${tabs('list',[['hot','เลขออกบ่อย (Hot)'],['cold','เลขขาด (Cold)']])}</div>
+  <div class="px sub" style="margin-top:10px">${hot?'5 อันดับที่ออกบ่อยที่สุดในช่วงที่เลือก':`5 อันดับที่หายไปนานที่สุด (นับจากข้อมูลทั้งหมด)${never?` · อีก ${never} เลขยังไม่เคยออกเลยตั้งแต่ ${thDate(ALL[0].date)}`:''}`}</div>
+  <ol class="list px" style="margin-top:10px">${items.map(x=>`<li><button class="row" style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px" onclick="set({page:'detail',pick:'${x.n}'})">
+    <span class="num" style="font-size:24px;color:${hot?'var(--gold)':'var(--cold)'}">${x.n}</span>
+    <span><div class="sub" style="font-size:11px">${hot?'จำนวนครั้งที่ออก':'ไม่ปรากฏมาแล้ว'}</div><b>${hot?x.count+' ครั้ง':x.gap+' งวด'}</b></span>
+    <span><div class="sub" style="font-size:11px">${hot?'อัตราความถี่':'ออกครั้งล่าสุด'}</div><b>${hot?pct(x.rate):thDate(x.last)}</b></span></button></li>`).join('')}</ol>
+  <div class="note px mt">เลขออกบ่อยหรือเลขขาด ไม่ได้แปลว่ามีโอกาสออกมากขึ้นในงวดถัดไป เป็นเพียงการสรุปข้อมูลในอดีต</div>`;
+}
+
+function pagePop(){
+  const d=S.digits;
+  const recs=SRC_NAMES.map(nm=>sourceRecord(nm,d));
+  const nt=nextTips(d);
+  let body='';
+  const chipsN=(t,res)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${t.map(x=>`<span class="num" style="font-size:16px;border:1px solid var(--line);border-radius:8px;padding:2px 9px;letter-spacing:1px;${x===res?'background:var(--gold);color:var(--bg)':''}">${x}</span>`).join('')}</div>`;
+  if(S.popView==='nums'){
+    body = nt.length
+      ? `<div class="px" style="margin-top:14px"><h2>งวด ${NEXT_DRAW}</h2><div class="sub" style="margin-top:4px">${nt.length} สำนัก · เก็บล่าสุด ${DATA.updated?DATA.updated.slice(0,10):''}</div></div>`+nt.map(s=>`<section class="card px" style="margin-top:10px"><b>${s.name}</b>${chipsN(s.tips)}</section>`).join('')
+      : emptyState(`เลขสำนักงวด ${NEXT_DRAW}`,'ยังไม่มี · ระบบเก็บอัตโนมัติวันที่ 14–15 และ 30–31 ของทุกเดือน');
+    const withLast=recs.map(r=>({r,last:r.rows[r.rows.length-1]})).filter(x=>x.last&&x.last.date===LATEST.date);
+    if(withLast.length) body+=`<div class="px" style="margin-top:20px"><h2>งวดล่าสุด ${thDate(LATEST.date)}</h2><div class="sub" style="margin-top:4px">ผลจริง ${d==='2'?'เลขท้าย 2 ตัว':'3 ตัวท้าย'} <b class="num" style="color:#fff;letter-spacing:1px">${d==='2'?LATEST.two:LATEST.three}</b></div></div>`+
+      withLast.map(({r,last})=>`<section class="card px" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b>${r.name}</b><span class="badge ${last.ex||last.pm?'b-has':'b-new'}">${last.ex?'ถูก':(last.pm?(d==='2'?'ถูกแบบกลับ':'ถูกแบบสลับ'):'ไม่ถูก')}</span></div>${chipsN(last.tips,last.result)}</section>`).join('');
+  }
+  if(S.popView==='sources') body=`<ul class="list px" style="margin-top:12px">${recs.map(r=>`<li class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>${r.name}</b><span class="badge ${BADGE[r.status]}">${r.status}</span></div>
+      <div class="sub" style="margin-top:4px">${(DATA.sourceInfo||{})[r.name]||''}</div>
+      ${r.n?`<div class="sub" style="margin-top:12px;font-size:11px">ความแม่นย้อนหลัง ${r.n} งวด (${d==='2'?'เลข 2 ตัว':'เลข 3 ตัว'})</div>
+        <div class="grid3" style="margin-top:4px;font-size:11px;color:var(--muted)">
+          <span>ตรงลำดับ<br><b style="font-size:13px;color:#fff">${r.ex}/${r.n} (${(r.ex/r.n*100).toFixed(1)}%)</b></span>
+          <span>${d==='2'?'รวมกลับ':'รวมสลับ'}<br><b style="font-size:13px;color:#fff">${r.pm}/${r.n} (${(r.pm/r.n*100).toFixed(1)}%)</b></span>
+          <span>เลขที่ให้/งวด<br><b style="font-size:13px;color:#fff">${(r.rows.reduce((a,x)=>a+x.tips.length,0)/r.n).toFixed(1)}</b></span></div>
+        <button class="btn ghost" style="margin-top:12px;min-height:40px" onclick="set({openHist:S.openHist==='${r.name}'?'':'${r.name}'})">${S.openHist===r.name?'ซ่อนประวัติรายงวด':'ดูประวัติรายงวด'}</button>
+        ${S.openHist===r.name?`<ul class="list" style="margin-top:10px">${r.rows.slice().reverse().map(x=>`<li style="border-top:1px solid var(--line);padding-top:8px"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${thDate(x.date)}</b><span>ผล <b class="num" style="letter-spacing:1px">${x.result}</b> · <span class="${x.ex||x.pm?'ok':'sub'}">${x.ex?'ถูก':(x.pm?'ถูกแบบสลับ':'ไม่ถูก')}</span></span></div><div class="sub" style="margin-top:4px;letter-spacing:.5px">${x.tips.join(' ')}</div></li>`).join('')}</ul>`:''}`
+      :`<div class="sub" style="margin-top:10px">ยังไม่มีประวัติ${d==='3'?'เลข 3 ตัว':''}ที่ตรวจกับผลจริงได้</div>`}
+      </li>`).join('')}</ul>
+    <p class="px sub" style="margin-top:10px;line-height:1.6">ที่มา: ข่าวที่เผยแพร่ก่อนวันออกรางวัล · เก็บเฉพาะตัวเลข ลิงก์ และเวลา · ความแม่นจะยุติธรรมขึ้นเมื่อดูคู่กับจำนวนเลขที่ให้ต่องวด</p>`;
+  if(S.popView==='events') body=emptyState('ยังไม่ได้เลือกแหล่งข้อมูล','เหตุการณ์และกระแสสังคม (ข่าว, Facebook, TikTok, YouTube, Google Trends) ยังต้องตกลงแหล่งข้อมูลและสูตรคะแนน');
+  return `<header class="top"><div><h1>เลขจากสำนัก</h1><div class="sub">Popular Numbers</div></div>${REAL_PILL}</header>
+  <div class="px" style="margin-top:8px">${seg('digits',DIG)}</div>
+  <div class="px mt">${tabs('popView',[['nums','เลขงวดนี้'],['sources','รายชื่อสำนัก'],['events','เหตุการณ์และกระแส']])}</div>
+  ${body}`;
+}
+
+// ===== ทดสอบย้อนหลังแบบ walk-forward: ทุกงวดใช้เฉพาะข้อมูลก่อนหน้า แล้วเลือก Top 10 ตามคะแนนสถิติ 4 ปัจจัย =====
+const BT={};
+function backtest(){
+  const ck=S.digits+JSON.stringify(S.w); if(BT[ck]) return BT[ck];
+  const k=keyOf(); const seq=ALL.map(r=>r[k]); const TEST=240; const res=[];
+  for(let i=seq.length-TEST;i<seq.length;i++){
+    const sc=statScores(seq.slice(0,i),S.digits).rows;
+    const top=Object.values(sc).sort((a,b)=>b.score-a.score||b.cMid-a.cMid||(a.n<b.n?-1:1)).slice(0,10).map(x=>x.n);
+    const r=seq[i];
+    res.push({date:ALL[i].date,result:r,top,exact:top.includes(r),perm:top.some(t=>permSet(t).has(r))});
+  }
+  return BT[ck]={res,TEST};
+}
+function pagePerf(){
+  const two=S.digits==='2', exact=S.mode==='exact';
+  if(!BT[S.digits+JSON.stringify(S.w)] && !S.btReady){ setTimeout(()=>{backtest();S.btReady=true;render();},30);
+    return `<header class="top"><div><h1>ประสิทธิภาพโมเดล</h1></div>${REAL_PILL}</header><div class="card px" style="text-align:center;padding:30px">กำลังทดสอบย้อนหลัง 240 งวด…</div>`; }
+  S.btReady=false;
+  const bt=backtest(); const n=bt.res.length;
+  const hits=bt.res.filter(r=>exact?r.exact:r.perm).length;
+  const rate=hits/n*100;
+  const mj=sourceRecord('แม่จำเนียร','2');
+  const mjRate= two? (exact?mj.ex:mj.pm)/mj.n*100 : null;
+  const base = two?(exact?10:18.2):(exact?1:5.0);
+  const max = Math.max(base,rate,mjRate||0)*1.5;
+  const H=150, bh=v=>Math.max(2,Math.round(v/max*H));
+  const exH=bt.res.filter(r=>r.exact).length, pmH=bt.res.filter(r=>r.perm).length;
+  const bar=(v,label,color)=>`<span style="display:flex;flex-direction:column;align-items:center;gap:6px"><b style="font-size:12px">${label}</b><i style="display:block;width:100%;border-radius:8px 8px 0 0;height:${bh(v)}px;background:${color}"></i></span>`;
+  const none=`<span style="display:flex;flex-direction:column;align-items:center;gap:6px"><b style="font-size:11px;color:var(--muted)">ไม่มีข้อมูล</b><i style="display:block;width:100%;height:2px;background:var(--line)"></i></span>`;
+  return `<header class="top"><div><h1>ประสิทธิภาพโมเดล</h1><div class="sub">Walk-forward Backtest · ใช้เฉพาะข้อมูลก่อนวันออกรางวัล</div></div>${REAL_PILL}</header>
+  <div class="px" style="margin-top:8px">${seg('digits',DIG)}</div>
+  <div class="px" style="margin-top:12px">${chips('mode',[['exact','ตรงลำดับเดิม'],['perm','ตรงแบบสลับ']])}</div>
+  <section class="card px mt">
+    <h2>อัตราถูก Top 10 เทียบการสุ่ม</h2>
+    <div class="sub" style="line-height:1.6">สถิติ: ทดสอบ ${n} งวด (${thDate(bt.res[0].date)} – ${thDate(LATEST.date)}) ด้วยสูตร 4 ปัจจัย${two?` · แม่จำเนียร: ${mj.n} งวด (ปี 2569)`:''}</div>
+    <div role="img" aria-label="กราฟเปรียบเทียบกับการสุ่ม" style="position:relative;height:190px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:end;border-bottom:1px solid var(--line);margin-top:14px;padding:0 4px">
+      <span style="position:absolute;left:0;right:0;bottom:${bh(base)}px;border-top:2px dashed var(--muted)"></span>
+      <span style="position:absolute;right:0;bottom:${bh(base)+6}px;font-size:11px;color:var(--muted);background:var(--s1);padding:0 4px">เส้นสุ่ม ${base}%</span>
+      ${bar(rate,rate.toFixed(1)+'%','var(--gold)')}
+      ${mjRate===null?none:bar(mjRate,mjRate.toFixed(1)+'%','var(--cold)')}
+      ${none}
+      ${bar(base,base+'%','#4A5F86')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;font-size:11px;color:var(--muted);margin-top:6px"><span>สถิติ</span><span>แม่จำเนียร</span><span>รวม</span><span>สุ่ม</span></div>
+  </section>
+  <div class="px" style="margin-top:20px"><h2>สรุปผล</h2></div>
+  <div class="card px" style="margin-top:10px;padding:0;overflow:hidden"><table>
+    <tr><th>กลุ่ม</th><th>ตรงลำดับ</th><th>ตรงสลับ</th></tr>
+    <tr><td><b>สถิติ</b></td><td>${exH}/${n} (${(exH/n*100).toFixed(1)}%)</td><td>${pmH}/${n} (${(pmH/n*100).toFixed(1)}%)</td></tr>
+    <tr><td><b>แม่จำเนียร</b></td>${two?`<td>${mj.ex}/${mj.n} (${(mj.ex/mj.n*100).toFixed(1)}%)</td><td>${mj.pm}/${mj.n} (${(mj.pm/mj.n*100).toFixed(1)}%)</td>`:'<td colspan="2" class="sub">ไม่มีเลข 3 ตัว</td>'}</tr>
+    <tr><td><b>รวม</b></td><td colspan="2" class="sub">เริ่มทดสอบได้เมื่อมีเลขสำนักครบทุกงวดที่ทดสอบ</td></tr>
+    <tr><td><b>สุ่ม 10 เลข</b></td><td>${two?10:1}%</td><td>${two?18.2:5.0}%</td></tr>
+  </table></div>
+  <div class="note px mt"><b style="color:var(--gold)">ผลที่ได้:</b> ทั้งสูตรสถิติ${two?'และแม่จำเนียร':''}ยังได้ผลใกล้เคียงการสุ่ม ส่วนต่างที่เห็นเกิดจากความบังเอิญได้${two?` (แม่จำเนียรมีข้อมูลแค่ ${mj.n} งวด ยังน้อยเกินจะสรุป)`:''}</div>
+  <div class="px" style="margin-top:18px"><h2>ผลรายงวดล่าสุด (สถิติ)</h2></div>
+  <ul class="list px" style="margin-top:10px">${bt.res.slice(-8).reverse().map(r=>{const hit=exact?r.exact:r.perm;return `<li class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span><b>${thDate(r.date)}</b><div class="sub">ผลจริง <span class="num" style="color:#fff;letter-spacing:1px">${r.result}</span></div></span><span class="badge" style="${hit?'background:var(--gold);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}">${hit?'ถูก':'ไม่ถูก'}</span></div><div class="sub" style="margin-top:6px;letter-spacing:.5px">Top 10: ${r.top.join(' ')}</div></li>`;}).join('')}</ul>`;
+}
+
+function pageAdmin(){
+  const w=S.w; const {stat,pop,total}=weights();
+  const rows=[['y10','สถิติย้อนหลัง 10 ปี','สถิติ'],['y15','สถิติย้อนหลัง 1–5 ปี','สถิติ'],['pattern','รูปแบบตัวเลข','สถิติ'],['relation','ความสัมพันธ์ระหว่างรางวัล','สถิติ'],['source','สำนักใบ้หวย','สำนัก'],['trend','เหตุการณ์และกระแส','สำนัก']];
+  const okTotal = total===100;
+  return `<header class="top"><div><h1>หลังบ้าน (Admin)</h1><div class="sub">เฉพาะผู้ดูแล · ผู้ใช้ทั่วไปไม่เห็นหน้านี้</div></div><span class="pill">ตัวอย่าง</span></header>
+  <section class="card px" style="margin-top:8px">
+    <h2>สถานะระบบ</h2>
+    <dl style="margin-top:6px">
+      <div class="kv"><dt>ดึงผลรางวัลล่าสุด</dt><dd class="ok">สำเร็จ · [วันเวลา]</dd></div>
+      <div class="kv"><dt>เทียบแหล่งหลัก / สำรอง</dt><dd class="ok">ตรงกัน</dd></div>
+      <div class="kv"><dt>เก็บข้อมูลสำนัก</dt><dd class="warn">[n] แหล่งรอตรวจ</dd></div>
+      <div class="kv"><dt>ข้อผิดพลาดล่าสุด</dt><dd>[n] รายการ</dd></div>
+    </dl>
+    <div class="grid2" style="margin-top:12px"><button class="btn">สั่งดึงข้อมูลใหม่</button><button class="btn ghost">นำเข้า CSV</button></div>
+  </section>
+  <section class="card px mt">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>ปรับน้ำหนักคะแนน</h2><b class="${okTotal?'ok':'warn'}">รวม ${total}%</b></div>
+    <div class="sub" style="margin-top:4px">สถิติ ${stat}% · สำนัก+กระแส ${pop}% → Combined = สถิติ×${(stat/total).toFixed(2)} + สำนัก×${(pop/total).toFixed(2)}</div>
+    ${rows.map(([k,l,g])=>`<div class="slider"><label for="w-${k}" style="display:flex;justify-content:space-between;font-size:13px"><span>${l} <span class="sub">· ${g}</span></span><b>${w[k]}%</b></label><input id="w-${k}" type="range" min="0" max="40" step="5" value="${w[k]}" oninput="S.w.${k}=+this.value;render()"></div>`).join('')}
+    ${okTotal?'':'<p class="warn" style="font-size:13px;margin:10px 0 0">น้ำหนักรวมต้องเท่ากับ 100% ก่อนบันทึก</p>'}
+    <div class="grid2" style="margin-top:12px"><button class="btn" ${okTotal?'':'disabled style="opacity:.4"'}>บันทึก (มีประวัติการแก้ไข)</button><button class="btn ghost" onclick="S.w={y10:15,y15:20,pattern:15,relation:10,source:20,trend:20};render()">คืนค่าเริ่มต้น</button></div>
+  </section>
+  <section class="card px mt">
+    <h2>เมนูจัดการ</h2>
+    <ul class="list" style="margin-top:10px">${['ตรวจสอบผลรางวัล','จัดการแหล่งข้อมูล','จัดการสำนักใบ้หวย','จัดการแหล่งข้อมูลเหตุการณ์','ตรวจสอบข้อมูลที่รวบรวมได้','ประวัติการทำงาน','จัดการบัญชีผู้ดูแล'].map(m=>`<li><button class="row" style="min-height:48px;justify-content:space-between"><span>${m}</span><span style="transform:rotate(180deg);display:flex">${svg('back',18)}</span></button></li>`).join('')}</ul>
+  </section>
+  <p class="px sub" style="margin-top:12px">ลองเลื่อนแถบน้ำหนัก แล้วกลับไปดูหน้าภาพรวมกับหน้าที่มาของคะแนน คะแนนจะเปลี่ยนตาม</p>`;
+}
+
+// ===== หวยมาเลย์ (Magnum 4D) — ใช้เฉพาะรางวัลที่ 1, 2, 3 · ข้อมูลอยู่ใน data4d.js =====
+const MY = window.TLA_MY || {draws:[]};
+const MY_ALL = MY.draws.map(([date,a,b,c])=>({date,nums:[a,b,c]}));
+const MY_LATEST = MY_ALL[MY_ALL.length-1];
+const MY_U = Array.from({length:10000},(_,i)=>String(i).padStart(4,'0'));
+const MY_WIN_LONG=1650, MY_WIN_MID=825; // ≈10 ปี และ ≈5 ปี (ปีละประมาณ 165 งวด)
+function myNextDraw(){ const d=new Date(MY_LATEST.date+'T12:00:00'); do{ d.setDate(d.getDate()+1);}while(![0,3,6].includes(d.getDay())); return d.toISOString().slice(0,10); }
+const TH_ML=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function thDateLong(s){ const [y,m,d]=s.split('-').map(Number); return d+' '+TH_ML[m-1]+' '+(y+543); }
+const DAYS=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+function dayName(s){ return DAYS[new Date(s+'T12:00:00').getDay()]; }
+function myPeriod(){
+  if(S.period==='all') return MY_ALL;
+  const yrs={'1y':1,'5y':5,'10y':10}[S.period]; const [y,m,d]=MY_LATEST.date.split('-').map(Number);
+  const cut=String(y-yrs)+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  return MY_ALL.filter(r=>r.date>cut);
+}
+// ค่าที่คำนวณล่วงหน้าเพื่อให้เร็ว: กลุ่มรูปแบบของแต่ละเลข และชุดตัวเลข (bitmask) ของแต่ละเลข
+const MY_MASK=new Int32Array(10000), MY_FK=FEATS.map(()=>new Array(10000)), MY_FSIZE=FEATS.map(()=>({}));
+MY_U.forEach((n,i)=>{ let m=0; for(const c of n) m|=1<<(+c); MY_MASK[i]=m; FEATS.forEach((f,j)=>{ const k=f(n); MY_FK[j][i]=k; MY_FSIZE[j][k]=(MY_FSIZE[j][k]||0)+1; }); });
+const popc=x=>{ let c=0; while(x){ x&=x-1; c++; } return c; };
+const MY_SHARE={};
+function myShareFrac(pm){ if(MY_SHARE[pm]!==undefined) return MY_SHARE[pm]; let c=0; for(let i=0;i<10000;i++) if(MY_MASK[i]&pm) c++; return MY_SHARE[pm]=c/10000; }
+// สูตร 4 ปัจจัยแบบเดียวกับหวยไทย ปรับให้เลข 4 หลักและ 3 รางวัลต่องวด
+function myScores(draws){
+  const w=S.w;
+  const freq=(win)=>{ const c=new Int32Array(10000); const s=Math.max(0,draws.length-win); for(let i=s;i<draws.length;i++){ const r=draws[i].nums; c[+r[0]]++; c[+r[1]]++; c[+r[2]]++; } let m=0; for(let i=0;i<10000;i++) if(c[i]>m) m=c[i]; return {c,m:m||1}; };
+  const L=freq(MY_WIN_LONG), M=freq(MY_WIN_MID);
+  const win=draws.slice(-MY_WIN_LONG); let total=0;
+  const pr=new Float64Array(10000);
+  FEATS.forEach((f,j)=>{ const obs={}; for(let i=0;i<10000;i++){ if(L.c[i]){ const k=MY_FK[j][i]; obs[k]=(obs[k]||0)+L.c[i]; } }
+    total = win.length*3;
+    for(let i=0;i<10000;i++){ const k=MY_FK[j][i]; pr[i]+=(((obs[k]||0)/total)/(MY_FSIZE[j][k]/10000))/FEATS.length; } });
+  let pmn=Infinity,pmx=-Infinity; for(let i=0;i<10000;i++){ if(pr[i]<pmn) pmn=pr[i]; if(pr[i]>pmx) pmx=pr[i]; }
+  const pm=MY_MASK[+draws[draws.length-1].nums[0]];
+  const tw=w.y10+w.y15+w.pattern+w.relation||1;
+  const sc=new Float64Array(10000);
+  for(let i=0;i<10000;i++){
+    const rel=popc(MY_MASK[i]&pm)/4*100;
+    const pat=pmx===pmn?50:(pr[i]-pmn)/(pmx-pmn)*100;
+    sc[i]=Math.round((w.y10*L.c[i]/L.m*100 + w.y15*M.c[i]/M.m*100 + w.pattern*pat + w.relation*rel)/tw*10)/10; }
+  return {sc, cLong:L.c, cMid:M.c};
+}
+function myTop(sc,k){ const top=[]; for(let i=0;i<10000;i++){ const v=sc[i]; if(top.length<k || v>sc[top[top.length-1]]){ let j=top.length; top.push(i); while(j>0 && (sc[top[j-1]]<v)){ top[j]=top[j-1]; j--; } top[j]=i; if(top.length>k) top.pop(); } } return top.map(i=>MY_U[i]); }
+const MY_CACHE={};
+function myStats(){
+  const ck=S.period+JSON.stringify(S.w); if(MY_CACHE[ck]) return MY_CACHE[ck];
+  const P=myPeriod(); const cnt=new Int32Array(10000), byPrize=[new Int32Array(10000),new Int32Array(10000),new Int32Array(10000)];
+  P.forEach(r=>r.nums.forEach((n,j)=>{cnt[+n]++; byPrize[j][+n]++;}));
+  const lastIdx=new Int32Array(10000).fill(-1); MY_ALL.forEach((r,i)=>r.nums.forEach(n=>{lastIdx[+n]=i;}));
+  const s=myScores(P.length>=10?P:MY_ALL);
+  const max=Math.max(...cnt);
+  return MY_CACHE[ck]={P,cnt,byPrize,lastIdx,sc:s.sc,max};
+}
+function myRow(st,n){ const i=+n, li=st.lastIdx[i]; return {n,count:st.cnt[i],score:st.sc[i],last:li<0?null:MY_ALL[li].date,gap:li<0?null:MY_ALL.length-1-li,p:[st.byPrize[0][i],st.byPrize[1][i],st.byPrize[2][i]]}; }
+function myPermCount(st,n){ const ps=permSet(n); let c=0; st.P.forEach(r=>r.nums.forEach(x=>{ if(ps.has(x)) c++; })); return c; }
+
+function gameBar(){
+  return `<div class="px" style="padding-top:12px"><div class="seg" style="grid-template-columns:1fr 1fr">${[['th','หวยไทย'],['my','หวยมาเลย์ (Magnum 4D)']].map(([v,l])=>`<button class="${S.game===v?'on':''}" style="min-height:40px;font-size:14px" onclick="set({game:'${v}',page:'${S.page==='pop'||S.page==='detail'?'home':S.page}'})">${l}</button>`).join('')}</div></div>`;
+}
+function myRowsHtml(rows){
+  return `<ol class="list px" style="margin-top:12px">${rows.map((x,i)=>`<li><button class="row" onclick="set({page:'detail',pick:'${x.n}'})">
+    <span style="width:20px;font-size:13px;color:var(--muted);font-weight:600">${i+1}</span>
+    <span class="num" style="font-size:24px;width:78px;color:${i<3?'var(--gold)':'#fff'}">${x.n}</span>
+    <span style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+      <span style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>ออก ${x.count} ครั้งในช่วงนี้</span><b style="color:#fff">${x.score.toFixed(1)}</b></span>
+      <span class="bar"><i style="width:${x.score}%"></i></span></span></button></li>`).join('')}</ol>`;
+}
+function pageMyHome(){
+  const st=myStats(); const top=myTop(st.sc,10).map(n=>myRow(st,n)); const nx=myNextDraw();
+  return topHeader('Thai Lottery Analytics','หวยมาเลย์ · Magnum 4D').replace('<span class="pill">ข้อมูลตัวอย่าง</span>',REAL_PILL) + `
+  <section class="card px" style="border-color:#E0B654">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:14px;font-weight:700;color:var(--gold)">เลขวิเคราะห์งวดนี้</span><b>${dayName(nx)} ${thDateLong(nx)}</b></div>
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-top:12px;text-align:center">
+      <div class="sub">เลข 4 ตัว อันดับ 1</div><div class="num" style="font-size:44px;color:var(--gold);letter-spacing:6px;line-height:1.2">${top[0].n}</div>
+      <div class="sub" style="margin-top:4px">อันดับ 2–3: <b class="num" style="color:#fff;letter-spacing:1px">${top[1].n} · ${top[2].n}</b></div></div>
+    <div class="sub" style="margin-top:10px;line-height:1.6">จากสถิติรางวัลที่ 1–3 · ${PERNAME[S.period]} · คะแนนสูงสุดจากสูตร ไม่ใช่โอกาสถูกรางวัล${new Date(nx+'T12:00:00').getDay()===0?'':''}</div>
+  </section>
+  <div class="px" style="margin-top:14px">${chips('period',PER)}</div>
+  <div class="px sub" style="margin-top:8px">ช่วงข้อมูลที่ใช้คำนวณ: ${PERNAME[S.period]} · ${st.P.length} งวด · ${thDate(st.P[0].date)} – ${thDate(MY_LATEST.date)}</div>
+  <div class="px" style="margin-top:16px;display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>Statistical Numbers — Top 10</h2><span class="sub">สูตร 4 ปัจจัย</span></div>
+  ${myRowsHtml(top)}
+  <section class="card px mt"><div class="sub">งวดล่าสุด ${dayName(MY_LATEST.date)} ${thDate(MY_LATEST.date)}</div>
+    <div class="grid3" style="margin-top:8px;text-align:center">${MY_LATEST.nums.map((n,j)=>`<div style="background:var(--bg);border-radius:10px;padding:8px"><div class="sub" style="font-size:11px">รางวัลที่ ${j+1}</div><div class="num" style="font-size:20px;letter-spacing:2px">${n}</div></div>`).join('')}</div></section>
+  <div class="note px mt" style="display:flex;gap:10px">${svg('info',20,'#E0B654')}<span>Magnum 4D มี 10,000 เลข ออกรางวัลที่ 1–3 รวม 3 เลขต่องวด ทุกเลขมีโอกาสเท่ากันในแต่ละงวด · ออกทุกพุธ เสาร์ อาทิตย์ และบางวันอังคารพิเศษ <a href="#" onclick="set({page:'perf'});return false"><b>ดูผลทดสอบย้อนหลัง</b></a></span></div>`;
+}
+function pageMyDetail(){
+  const st=myStats(); const x=myRow(st,S.pick||myTop(st.sc,1)[0]);
+  const ps=[...permSet(x.n)].filter(p=>p!==x.n);
+  return `<header class="top" style="justify-content:flex-start"><button class="back" aria-label="กลับ" onclick="set({page:'home'})">${svg('back')}</button><div><div style="font-size:16px;font-weight:700">ที่มาของคะแนน</div><div class="sub">Magnum 4D · ${PERNAME[S.period]} (${st.P.length} งวด)</div></div></header>
+  <section class="card px" style="text-align:center;padding:20px">
+    <div class="num" style="font-size:64px;line-height:1;color:var(--gold);letter-spacing:6px">${x.n}</div>
+    <div class="sub" style="margin-top:8px;font-size:13px">คะแนนสถิติ</div><div class="num" style="font-size:36px">${x.score.toFixed(1)}</div>
+    <div class="sub" style="margin-top:6px">เลขสลับตำแหน่งมี ${ps.length} แบบ</div>
+  </section>
+  <div class="px" style="margin-top:18px"><h2>ข้อมูลที่ใช้คำนวณ</h2></div>
+  <dl class="card px" style="margin-top:10px;padding:4px 14px">
+    <div class="kv"><dt>ออกในรางวัลที่ 1–3</dt><dd>${x.count} ครั้ง / ${st.P.length} งวด</dd></div>
+    <div class="kv"><dt>แยกรางวัล (ที่ 1 / 2 / 3)</dt><dd>${x.p.join(' / ')}</dd></div>
+    <div class="kv"><dt>ออกแบบสลับตำแหน่ง (รวมตรง)</dt><dd>${myPermCount(st,x.n)} ครั้ง</dd></div>
+    <div class="kv"><dt>ออกครั้งล่าสุด</dt><dd>${x.last?thDate(x.last):'ยังไม่เคยออก'}</dd></div>
+    <div class="kv"><dt>ไม่ปรากฏมาแล้ว</dt><dd>${x.gap===null?'—':x.gap+' งวด'}</dd></div>
+  </dl>
+  <p class="px sub" style="margin-top:16px;line-height:1.6">ข้อมูลรางวัลที่ 1–3 ตั้งแต่ ${thDate(MY_ALL[0].date)} ถึง ${thDate(MY_LATEST.date)} (${MY_ALL.length} งวด)</p>`;
+}
+function pageMyStat(){
+  const st=myStats();
+  const shades=['#182D5A','#2E4470','#6B6A5C','#A78B4F','#E0B654'];
+  const D=[...'0123456789'];
+  const pos=[0,1,2,3].map(p=>{const c=Array(10).fill(0); st.P.forEach(r=>r.nums.forEach(n=>c[+n[p]]++)); return c;});
+  const mx=Math.max(...pos.flat()), mn=Math.min(...pos.flat()); const lv=c=>mx===mn?2:Math.min(4,Math.floor((c-mn)/(mx-mn)*4.999));
+  const heat=`<div class="heat" style="grid-template-columns:52px repeat(10,1fr)"><span></span>${D.map(d=>`<span style="height:16px;color:var(--muted);font-size:10px">${d}</span>`).join('')}
+    ${['หลักพัน','หลักร้อย','หลักสิบ','หลักหน่วย'].map((l,r)=>`<span style="color:var(--muted);font-size:11px;justify-content:flex-start">${l}</span>`+pos[r].map((c,d)=>{const L=lv(c);return `<span title="${l} เลข ${d}: ${c} ครั้ง" style="height:44px;flex-direction:column;background:${shades[L]};color:${L>=3?'#0A1630':'#D5DCE8'}">${d}<small style="font-size:9px;font-weight:500">${c}</small></span>`;}).join('')).join('')}</div>`;
+  const hot=S.list==='hot'; let items, never=0;
+  if(hot){ const idx=Array.from({length:10000},(_,i)=>i).sort((a,b)=>st.cnt[b]-st.cnt[a]||st.lastIdx[b]-st.lastIdx[a]); items=idx.slice(0,5).map(i=>myRow(st,MY_U[i])); }
+  else { for(let i=0;i<10000;i++) if(st.lastIdx[i]<0) never++; const idx=Array.from({length:10000},(_,i)=>i).filter(i=>st.lastIdx[i]>=0).sort((a,b)=>st.lastIdx[a]-st.lastIdx[b]); items=idx.slice(0,5).map(i=>myRow(st,MY_U[i])); }
+  return `<header class="top"><div><h1>วิเคราะห์สถิติ</h1><div class="sub">Magnum 4D · รางวัลที่ 1–3</div></div>${REAL_PILL}</header>
+  <div class="px" style="margin-top:8px">${chips('period',PER)}</div>
+  <div class="px sub" style="margin-top:8px">คำนวณจาก ${st.P.length} งวด (${st.P.length*3} เลข) · ${thDate(st.P[0].date)} – ${thDate(MY_LATEST.date)}</div>
+  <section class="card px mt"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:8px"><h2>Number Heatmap</h2><span class="sub">ความถี่ของแต่ละหลัก</span></div>${heat}
+    <p class="sub" style="margin:8px 0 0">ตัวเลขเล็ก = จำนวนครั้งที่ตัวเลขนั้นอยู่ในหลักนั้น</p></section>
+  <div class="px mt">${tabs('list',[['hot','เลขออกบ่อย (Hot)'],['cold','เลขขาด (Cold)']])}</div>
+  <div class="px sub" style="margin-top:10px">${hot?'5 อันดับที่ออกบ่อยที่สุดในช่วงที่เลือก':`5 อันดับที่หายไปนานที่สุด (นับจากข้อมูลทั้งหมด)${never?` · อีก ${never} เลขยังไม่เคยออกในรางวัลที่ 1–3 เลย`:''}`}</div>
+  <ol class="list px" style="margin-top:10px">${items.map(x=>`<li><button class="row" style="display:grid;grid-template-columns:80px 1fr 1fr;gap:8px" onclick="set({page:'detail',pick:'${x.n}'})">
+    <span class="num" style="font-size:22px;color:${hot?'var(--gold)':'var(--cold)'}">${x.n}</span>
+    <span><div class="sub" style="font-size:11px">${hot?'จำนวนครั้งที่ออก':'ไม่ปรากฏมาแล้ว'}</div><b>${hot?x.count+' ครั้ง':x.gap+' งวด'}</b></span>
+    <span><div class="sub" style="font-size:11px">${hot?'แยกรางวัล 1/2/3':'ออกครั้งล่าสุด'}</div><b>${hot?x.p.join('/'):thDate(x.last)}</b></span></button></li>`).join('')}</ol>
+  <div class="note px mt">เลขออกบ่อยหรือเลขขาด ไม่ได้แปลว่ามีโอกาสออกมากขึ้นในงวดถัดไป เป็นเพียงการสรุปข้อมูลในอดีต</div>`;
+}
+// ทดสอบย้อนหลัง walk-forward 165 งวดล่าสุด (≈1 ปี): ทุกงวดใช้เฉพาะข้อมูลก่อนหน้า เลือก Top 10 แล้วดูว่าตรงกับรางวัลที่ 1–3 ไหม
+const MY_BT={};
+function myBacktest(){
+  const ck=JSON.stringify(S.w); if(MY_BT[ck]) return MY_BT[ck];
+  const TEST=165, res=[];
+  for(let i=MY_ALL.length-TEST;i<MY_ALL.length;i++){
+    const s=myScores(MY_ALL.slice(Math.max(0,i-MY_WIN_LONG),i)); const top=myTop(s.sc,10);
+    const r=MY_ALL[i].nums; const ex=r.filter(n=>top.includes(n)); const pm=r.filter(n=>top.some(t=>permSet(t).has(n)));
+    res.push({date:MY_ALL[i].date,result:r,top,exact:ex.length>0,perm:pm.length>0,exN:ex,pmN:pm});
+  }
+  return MY_BT[ck]={res};
+}
+function pageMyPerf(){
+  const exact=S.mode==='exact', ck=JSON.stringify(S.w);
+  if(!MY_BT[ck] && !S.btReady){ setTimeout(()=>{myBacktest();S.btReady=true;render();},30);
+    return `<header class="top"><div><h1>ประสิทธิภาพโมเดล</h1><div class="sub">Magnum 4D</div></div>${REAL_PILL}</header><div class="card px" style="text-align:center;padding:30px">กำลังทดสอบย้อนหลัง 165 งวด…</div>`; }
+  S.btReady=false;
+  const bt=myBacktest(), n=bt.res.length, hits=bt.res.filter(r=>exact?r.exact:r.perm).length, rate=hits/n*100;
+  const base=exact?0.3:5.0, max=Math.max(base,rate)*1.6||1, H=150, bh=v=>Math.max(2,Math.round(v/max*H));
+  const exH=bt.res.filter(r=>r.exact).length, pmH=bt.res.filter(r=>r.perm).length;
+  return `<header class="top"><div><h1>ประสิทธิภาพโมเดล</h1><div class="sub">Magnum 4D · Walk-forward Backtest</div></div>${REAL_PILL}</header>
+  <div class="px" style="margin-top:8px">${chips('mode',[['exact','ตรงตัว'],['perm','ตรงแบบสลับ']])}</div>
+  <section class="card px mt"><h2>Top 10 ตรงกับรางวัลที่ 1–3 กี่งวด</h2>
+    <div class="sub" style="line-height:1.6">ทดสอบ ${n} งวด (${thDate(bt.res[0].date)} – ${thDate(MY_LATEST.date)}) · แต่ละงวดใช้เฉพาะข้อมูลก่อนหน้า</div>
+    <div role="img" aria-label="กราฟเปรียบเทียบโมเดลกับการสุ่ม" style="position:relative;height:190px;display:grid;grid-template-columns:repeat(2,1fr);gap:40px;align-items:end;border-bottom:1px solid var(--line);margin-top:14px;padding:0 30px">
+      <span style="position:absolute;left:0;right:0;bottom:${bh(base)}px;border-top:2px dashed var(--muted)"></span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:6px"><b style="font-size:12px">${rate.toFixed(1)}%</b><i style="display:block;width:100%;border-radius:8px 8px 0 0;height:${bh(rate)}px;background:var(--gold)"></i></span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:6px"><b style="font-size:12px">${base}%</b><i style="display:block;width:100%;border-radius:8px 8px 0 0;height:${bh(base)}px;background:#4A5F86"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:40px;text-align:center;font-size:11px;color:var(--muted);margin-top:6px;padding:0 30px"><span>สูตรสถิติ</span><span>สุ่ม 10 เลข</span></div></section>
+  <div class="card px mt" style="padding:0;overflow:hidden"><table>
+    <tr><th>กลุ่ม</th><th>ตรงตัว</th><th>ตรงแบบสลับ</th></tr>
+    <tr><td><b>สูตรสถิติ</b></td><td>${exH}/${n} (${(exH/n*100).toFixed(1)}%)</td><td>${pmH}/${n} (${(pmH/n*100).toFixed(1)}%)</td></tr>
+    <tr><td><b>สุ่ม 10 เลข</b></td><td>0.3%</td><td>5.0%</td></tr></table></div>
+  <div class="note px mt"><b style="color:var(--gold)">อ่านผล:</b> 4D มี 10,000 เลข ถ้าสุ่ม 10 เลขจะตรงกับรางวัลที่ 1–3 แค่ประมาณ 1 งวดในทุก 330 งวด ผลของสูตรที่ใกล้เส้นนี้ แปลว่ายังไม่ดีกว่าการสุ่ม</div>
+  <div class="px" style="margin-top:18px"><h2>ผลรายงวดล่าสุด</h2></div>
+  <ul class="list px" style="margin-top:10px">${bt.res.slice(-8).reverse().map(r=>{const hit=exact?r.exact:r.perm;return `<li class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span><b>${dayName(r.date)} ${thDate(r.date)}</b><div class="sub">ผล <span class="num" style="color:#fff;letter-spacing:1px">${r.result.join(' · ')}</span></div></span><span class="badge" style="${hit?'background:var(--gold);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}">${hit?'ถูก':'ไม่ถูก'}</span></div><div class="sub" style="margin-top:6px;letter-spacing:.5px">Top 10: ${r.top.join(' ')}</div></li>`;}).join('')}</ul>`;
+}
+
+const PAGES={home:pageHome,detail:pageDetail,stat:pageStat,pop:pagePop,perf:pagePerf,admin:pageAdmin};
+const NAV=[['home','ภาพรวม','home'],['stat','สถิติ','stat'],['pop','สำนัก','pop'],['perf','โมเดล','perf'],['admin','Admin','admin']];
+const MY_PAGES={home:pageMyHome,detail:pageMyDetail,stat:pageMyStat,perf:pageMyPerf,admin:pageAdmin};
+function render(){
+  const y=window.scrollY;
+  const my=S.game==='my';
+  const pg = my ? (MY_PAGES[S.page]||pageMyHome) : PAGES[S.page];
+  document.getElementById('app').innerHTML = (S.page==='admin'?'':gameBar()) + pg();
+  const cur = S.page==='detail'?'home':S.page;
+  const nav = my ? NAV.filter(x=>x[0]!=='pop') : NAV;
+  const el=document.getElementById('nav'); el.style.gridTemplateColumns='repeat('+nav.length+',1fr)';
+  el.innerHTML = nav.map(([p,l,i])=>`<button class="${cur===p?'on':''}" onclick="set({page:'${p}'})">${svg(i)}${l}</button>`).join('');
+  window.scrollTo(0,y);
+}
+render();
+</script>
+</body>
+</html>

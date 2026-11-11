@@ -252,7 +252,7 @@ function pageHome(){
     } else {
     const rec=sourceRecord('แม่จำเนียร','2');
     const last=rec.rows[rec.rows.length-1];
-    list = emptyState(`รอเลขสำนักงวด ${NEXT_DRAW}`,`ระบบเก็บเลขอัตโนมัติวันที่ 14–15 และ 30–31 ของทุกเดือน คะแนน${S.group==='pop'?'สำนัก':'รวม'}จะขึ้นเมื่อมีข้อมูล`)+
+    list = emptyState(`รอเลขสำนักงวด ${NEXT_DRAW}`,`ระบบเก็บเลขอัตโนมัติทุกวันช่วง 7 วันก่อนหวยออก (วันที่ 10–16 และ 25–31) คะแนน${S.group==='pop'?'สำนัก':'รวม'}จะขึ้นเมื่อมีข้อมูล`)+
       (last?`<div class="card px" style="margin-top:10px"><div class="sub">งวดที่แล้ว (${thDate(last.date)}) แม่จำเนียรให้</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${last.tips.map(t=>`<span class="num" style="font-size:16px;border:1px solid var(--line);border-radius:8px;padding:2px 9px;letter-spacing:1px;${t===last.result?'background:var(--gold);color:var(--bg)':''}">${t}</span>`).join('')}</div>
         <div class="sub" style="margin-top:8px">ผลจริง <b class="num" style="color:#fff;letter-spacing:1px">${last.result}</b> · ${last.ex?'ถูก':(last.pm?'ถูกแบบกลับ':'ไม่ถูก')}</div>
@@ -351,7 +351,7 @@ function pagePop(){
   if(S.popView==='nums'){
     body = nt.length
       ? `<div class="px" style="margin-top:14px"><h2>งวด ${NEXT_DRAW}</h2><div class="sub" style="margin-top:4px">${nt.length} สำนัก · เก็บล่าสุด ${DATA.updated?DATA.updated.slice(0,10):''}</div></div>`+nt.map(s=>`<section class="card px" style="margin-top:10px"><b>${s.name}</b>${chipsN(s.tips)}</section>`).join('')
-      : emptyState(`เลขสำนักงวด ${NEXT_DRAW}`,'ยังไม่มี · ระบบเก็บอัตโนมัติวันที่ 14–15 และ 30–31 ของทุกเดือน');
+      : emptyState(`เลขสำนักงวด ${NEXT_DRAW}`,'ยังไม่มี · ระบบเก็บอัตโนมัติทุกวันช่วง 7 วันก่อนหวยออก (วันที่ 10–16 และ 25–31)');
     const withLast=recs.map(r=>({r,last:r.rows[r.rows.length-1]})).filter(x=>x.last&&x.last.date===LATEST.date);
     if(withLast.length) body+=`<div class="px" style="margin-top:20px"><h2>งวดล่าสุด ${thDate(LATEST.date)}</h2><div class="sub" style="margin-top:4px">ผลจริง ${d==='2'?'เลขท้าย 2 ตัว':'3 ตัวท้าย'} <b class="num" style="color:#fff;letter-spacing:1px">${d==='2'?LATEST.two:LATEST.three}</b></div></div>`+
       withLast.map(({r,last})=>`<section class="card px" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b>${r.name}</b><span class="badge ${last.ex||last.pm?'b-has':'b-new'}">${last.ex?'ถูก':(last.pm?(d==='2'?'ถูกแบบกลับ':'ถูกแบบสลับ'):'ไม่ถูก')}</span></div>${chipsN(last.tips,last.result)}</section>`).join('');

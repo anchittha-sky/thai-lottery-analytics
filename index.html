@@ -195,7 +195,7 @@ const TIPS = DATA.tips || {};
 const SRC_NAMES = Object.keys(TIPS);
 function sourceRecord(name,d){
   d=d||'2'; const k=d==='2'?'two':'three'; const T=TIPS[name]||{};
-  const rows=Object.keys(T).sort().filter(dt=>BYDATE[dt] && T[dt][d] && T[dt][d].length).map(dt=>{ const r=BYDATE[dt][k], t=T[dt][d]; const ex=t.includes(r); const pm=ex||t.some(x=>permSet(x).has(r)); return {date:dt,result:r,tips:t,ex,pm}; });
+  const rows=Object.keys(T).sort().filter(dt=>BYDATE[dt] && !T[dt].entry && T[dt][d] && T[dt][d].length).map(dt=>{ const r=BYDATE[dt][k], t=T[dt][d]; const ex=t.includes(r); const pm=ex||t.some(x=>permSet(x).has(r)); return {date:dt,result:r,tips:t,ex,pm}; });
   const n=rows.length;
   return {name,rows,n,ex:rows.filter(r=>r.ex).length,pm:rows.filter(r=>r.pm).length,status:n>=24?'มีประวัติ':(n>0?'สะสมประวัติ':'สำนักใหม่')};
 }
@@ -376,7 +376,7 @@ function pagePop(){
         ${S.openHist===r.name?`<ul class="list" style="margin-top:10px">${r.rows.slice().reverse().map(x=>`<li style="border-top:1px solid var(--line);padding-top:8px"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${thDate(x.date)}</b><span>ผล <b class="num" style="letter-spacing:1px">${x.result}</b> · <span class="${x.ex||x.pm?'ok':'sub'}">${x.ex?'ถูก':(x.pm?'ถูกแบบสลับ':'ไม่ถูก')}</span></span></div><div class="sub" style="margin-top:4px;letter-spacing:.5px">${x.tips.join(' ')}</div></li>`).join('')}</ul>`:''}`
       :`<div class="sub" style="margin-top:10px">ยังไม่มีประวัติ${d==='3'?'เลข 3 ตัว':''}ที่ตรวจกับผลจริงได้</div>`}
       </li>`).join('')}</ul>
-    <p class="px sub" style="margin-top:10px;line-height:1.6">ที่มา: ข่าวที่เผยแพร่ก่อนวันออกรางวัล · เก็บเฉพาะตัวเลข ลิงก์ และเวลา · ความแม่นจะยุติธรรมขึ้นเมื่อดูคู่กับจำนวนเลขที่ให้ต่องวด</p>`;
+    <p class="px sub" style="margin-top:10px;line-height:1.6">ที่มา: ข่าวที่เผยแพร่ก่อนวันออกรางวัล · เก็บเฉพาะตัวเลข ลิงก์ และเวลา · สำนักที่เพิ่มเข้ามาเพราะใบ้ถูก จะไม่นับงวดที่ทำให้ถูกเพิ่ม เพื่อให้ความแม่นไม่สูงเกินจริง · ความแม่นจะยุติธรรมขึ้นเมื่อดูคู่กับจำนวนเลขที่ให้ต่องวด</p>`;
   if(S.popView==='events'){
     const ev=trendEvents(NEXT_ISO,d), ts=trendScores(d);
     const attr=s=>String(s||'').replace(/[&"<>]/g,c=>({'&':'&amp;','"':'&quot;','<':'&lt;','>':'&gt;'}[c]));

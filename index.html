@@ -202,13 +202,25 @@ function sourceRecord(name,d){
 function nextTips(d){ d=d||S.digits; const out=[]; SRC_NAMES.forEach(nm=>{ const t=(TIPS[nm][NEXT_ISO]||{})[d]; if(t&&t.length) out.push({name:nm,tips:[...new Set(t)]}); }); return out; }
 // คะแนนสำนัก = สัดส่วนสำนักที่ให้เลขนั้น (สำนักเดียวกันให้ซ้ำไม่นับเพิ่ม) ปรับเป็น 0–100
 function popularScores(){ const nt=nextTips(); if(!nt.length) return null; const c={}; nt.forEach(s=>s.tips.forEach(n=>{c[n]=(c[n]||0)+1;})); return {n:nt.length, rows:Object.keys(c).map(n=>({n,count:c[n],score:Math.round(c[n]/nt.length*1000)/10, by:nt.filter(s=>s.tips.includes(n)).map(s=>s.name)}))}; }
+// ===== เหตุการณ์และกระแส (จากข่าวที่รายงานกระแส Facebook / TikTok) — data.js: trends[วันที่งวด] = [{title,from,date,url,"2":[],"3":[]}] =====
+const TRENDS = DATA.trends || {};
+function trendEvents(iso,d){ d=d||S.digits; return (TRENDS[iso]||[]).map(e=>({...e,nums:[...new Set(e[d]||[])]})).filter(e=>e.nums.length); }
+// คะแนนกระแส = สัดส่วนเรื่องกระแสที่พูดถึงเลขนั้น ปรับเป็น 0–100
+function trendScores(d){ const ev=trendEvents(NEXT_ISO,d); if(!ev.length) return null; const c={}; ev.forEach(e=>e.nums.forEach(n=>{c[n]=(c[n]||0)+1;})); return {n:ev.length, rows:Object.keys(c).map(n=>({n,count:c[n],score:Math.round(c[n]/ev.length*1000)/10}))}; }
+// รวมคะแนน: สถิติ + สำนัก + กระแส (ใช้เฉพาะส่วนที่มีข้อมูล)
+function combineRows(st,ps,ts){
+  const w=S.w, ws=w.y10+w.y15+w.pattern+w.relation, wp=ps?w.source:0, wt=ts?w.trend:0, tot=ws+wp+wt;
+  const sm=Object.fromEntries(st.rows.map(r=>[r.n,r.score])), pm=ps?Object.fromEntries(ps.rows.map(r=>[r.n,r])):{}, tm=ts?Object.fromEntries(ts.rows.map(r=>[r.n,r.score])):{};
+  const all=new Set([...Object.keys(sm),...Object.keys(pm),...Object.keys(tm)]);
+  return [...all].map(n=>{ const p=pm[n], s=sm[n]||0, t=tm[n]||0, sc=p?p.score:0;
+    return {n,count:p?p.count:0,score:sc,by:p?p.by:[],st:s,tr:t,co:Math.round((s*ws+sc*wp+t*wt)/tot*10)/10}; });
+}
 const BADGE={'มีประวัติ':'b-has','สะสมประวัติ':'b-build','สำนักใหม่':'b-new'};
 
 function topFor(d){
   const sv=S.digits; S.digits=d;
-  const st=stats(), ps=popularScores(); let rows, src;
-  if(ps){ const w=S.w, ws=w.y10+w.y15+w.pattern+w.relation, wp=w.source; const pm=Object.fromEntries(ps.rows.map(r=>[r.n,r.score]));
-    rows=st.rows.map(r=>({n:r.n,v:Math.round((r.score*ws+(pm[r.n]||0)*wp)/(ws+wp)*10)/10})); src='รวมสถิติ + สำนัก'; }
+  const st=stats(), ps=popularScores(), ts=trendScores(); let rows, src;
+  if(ps||ts){ rows=combineRows(st,ps,ts).map(r=>({n:r.n,v:r.co})); src='รวมสถิติ'+(ps?' + สำนัก':'')+(ts?' + กระแส':''); }
   else { rows=st.rows.map(r=>({n:r.n,v:r.score})); src='จากสถิติ (เลขสำนักยังไม่ออก)'; }
   rows.sort((a,b)=>b.v-a.v||(a.n<b.n?-1:1)); S.digits=sv; return {top:rows.slice(0,3),src};
 }
@@ -231,13 +243,10 @@ function pageHome(){
         </span></button></li>`).join('')}</ol>
       ${ties.length?`<div class="px" style="margin-top:10px"><button class="btn ghost" onclick="set({showTies:${!S.showTies}})">${S.showTies?'ซ่อนเลขคะแนนเท่ากัน':`มีอีก ${ties.length} เลขคะแนนเท่ากับอันดับ 10 — ดูเพิ่ม`}</button></div>`:''}`;
   } else {
-    const ps=popularScores();
-    if(ps){
-      const st2=Object.fromEntries(st.rows.map(r=>[r.n,r.score]));
-      const w=S.w; const ws=w.y10+w.y15+w.pattern+w.relation, wp=w.source;
-      let rows=ps.rows.map(r=>({...r, st:st2[r.n], co:Math.round(((st2[r.n]||0)*ws+r.score*wp)/(ws+wp)*10)/10}));
+    const ps=popularScores(), ts=trendScores();
+    if(ps||(S.group==='combined'&&ts)){
       const key=S.group==='pop'?'score':'co';
-      if(S.group==='combined'){ const have=new Set(rows.map(r=>r.n)); st.rows.forEach(r=>{ if(!have.has(r.n)) rows.push({n:r.n,count:0,score:0,by:[],st:r.score,co:Math.round(r.score*ws/(ws+wp)*10)/10}); }); }
+      let rows=combineRows(st,ps,ts); if(S.group==='pop') rows=rows.filter(r=>r.count>0);
       rows.sort((a,b)=>b[key]-a[key]||b.st-a.st);
       const cut=(rows[9]||rows[rows.length-1])[key]; const top=rows.slice(0,10); const ties=rows.slice(10).filter(r=>r[key]===cut);
       const show=S.showTies?top.concat(ties):top;
@@ -245,10 +254,10 @@ function pageHome(){
         <span style="width:20px;font-size:13px;color:var(--muted);font-weight:600">${i<10?i+1:'='}</span>
         <span class="num" style="font-size:26px;width:${S.digits==='3'?64:44}px;color:${i<3?'var(--gold)':'#fff'}">${x.n}</span>
         <span style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
-          <span style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${S.group==='pop'?`${x.count} จาก ${ps.n} สำนัก`:`สถิติ ${(x.st||0).toFixed(0)} · สำนัก ${x.score.toFixed(0)}`}</span><b style="color:#fff">${x[key].toFixed(1)}</b></span>
+          <span style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${S.group==='pop'?`${x.count} จาก ${ps.n} สำนัก`:`สถิติ ${(x.st||0).toFixed(0)}${ps?` · สำนัก ${x.score.toFixed(0)}`:''}${ts?` · กระแส ${x.tr.toFixed(0)}`:''}`}</span><b style="color:#fff">${x[key].toFixed(1)}</b></span>
           <span class="bar"><i style="width:${x[key]}%"></i></span></span></button></li>`).join('')}</ol>
         ${ties.length?`<div class="px" style="margin-top:10px"><button class="btn ghost" onclick="set({showTies:${!S.showTies}})">${S.showTies?'ซ่อนเลขคะแนนเท่ากัน':`มีอีก ${ties.length} เลขคะแนนเท่ากับอันดับ 10 — ดูเพิ่ม`}</button></div>`:''}
-        <p class="px sub" style="margin-top:10px">เลขสำนักงวด ${NEXT_DRAW} จาก ${ps.n} สำนัก · คะแนนเหตุการณ์และกระแสยังไม่มีแหล่งข้อมูล</p>`;
+        <p class="px sub" style="margin-top:10px">${ps?`เลขสำนักงวด ${NEXT_DRAW} จาก ${ps.n} สำนัก`:'เลขสำนักงวดนี้ยังไม่ออก'} · ${ts?`กระแสจากข่าวโซเชียล ${ts.n} เรื่อง`:'ยังไม่มีข่าวกระแสงวดนี้'}</p>`;
     } else {
     const rec=sourceRecord('แม่จำเนียร','2');
     const last=rec.rows[rec.rows.length-1];
@@ -259,7 +268,7 @@ function pageHome(){
         <button class="btn ghost" style="margin-top:12px" onclick="set({page:'pop',popView:'sources'})">ดูประวัติความแม่นของสำนัก</button></div>`:'');
     }
   }
-  const info = {combined:['Combined Numbers — Top 10','สถิติ + สำนัก'],stat:['Statistical Numbers — Top 10','สูตร 4 ปัจจัย'],pop:['Popular Numbers — Top 10','จากสำนัก']}[S.group];
+  const info = {combined:['Combined Numbers — Top 10','สถิติ + สำนัก + กระแส'],stat:['Statistical Numbers — Top 10','สูตร 4 ปัจจัย'],pop:['Popular Numbers — Top 10','จากสำนัก']}[S.group];
   return head + `
   <section class="card px" style="border-color:#E0B654">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:14px;font-weight:700;color:var(--gold)">เลขวิเคราะห์งวดนี้</span><b>${NEXT_DRAW}</b></div>
@@ -368,7 +377,22 @@ function pagePop(){
       :`<div class="sub" style="margin-top:10px">ยังไม่มีประวัติ${d==='3'?'เลข 3 ตัว':''}ที่ตรวจกับผลจริงได้</div>`}
       </li>`).join('')}</ul>
     <p class="px sub" style="margin-top:10px;line-height:1.6">ที่มา: ข่าวที่เผยแพร่ก่อนวันออกรางวัล · เก็บเฉพาะตัวเลข ลิงก์ และเวลา · ความแม่นจะยุติธรรมขึ้นเมื่อดูคู่กับจำนวนเลขที่ให้ต่องวด</p>`;
-  if(S.popView==='events') body=emptyState('ยังไม่ได้เลือกแหล่งข้อมูล','เหตุการณ์และกระแสสังคม (ข่าว, Facebook, TikTok, YouTube, Google Trends) ยังต้องตกลงแหล่งข้อมูลและสูตรคะแนน');
+  if(S.popView==='events'){
+    const ev=trendEvents(NEXT_ISO,d), ts=trendScores(d);
+    const attr=s=>String(s||'').replace(/[&"<>]/g,c=>({'&':'&amp;','"':'&quot;','<':'&lt;','>':'&gt;'}[c]));
+    const card=(e,res)=>`<section class="card px" style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b style="line-height:1.5">${attr(e.title)}</b><span class="badge b-build" style="white-space:nowrap">${attr(e.from||'ข่าว')}</span></div>
+      <div class="sub" style="margin-top:4px">${e.date?thDate(e.date):''}${e.url?` · <a href="${attr(e.url)}" target="_blank" rel="noopener" style="color:var(--gold)">อ่านข่าว</a>`:''}</div>${chipsN(e.nums,res)}</section>`;
+    if(ev.length){
+      const top=ts.rows.sort((a,b)=>b.count-a.count||(a.n<b.n?-1:1)).slice(0,10);
+      body=`<div class="px" style="margin-top:14px"><h2>กระแสงวด ${NEXT_DRAW}</h2><div class="sub" style="margin-top:4px">${ev.length} เรื่อง จากข่าวที่รายงานกระแส Facebook / TikTok</div></div>
+        <section class="card px" style="margin-top:10px"><b>เลขที่ถูกพูดถึงมากสุด</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${top.map(r=>`<span style="border:1px solid var(--line);border-radius:8px;padding:2px 9px"><b class="num" style="font-size:16px;letter-spacing:1px">${r.n}</b> <span class="sub" style="font-size:11px">${r.count} เรื่อง</span></span>`).join('')}</div></section>`+
+        ev.slice().reverse().map(e=>card(e)).join('');
+    } else body=emptyState(`กระแสงวด ${NEXT_DRAW}`,'ยังไม่มี · ระบบเก็บจากข่าวที่รายงานเลขดังใน Facebook และ TikTok ทุกวันช่วง 5 วันก่อนหวยออก');
+    const lastEv=trendEvents(LATEST.date,d);
+    if(lastEv.length){ const res=d==='2'?LATEST.two:LATEST.three;
+      body+=`<div class="px" style="margin-top:20px"><h2>งวดล่าสุด ${thDate(LATEST.date)}</h2><div class="sub" style="margin-top:4px">ผลจริง <b class="num" style="color:#fff;letter-spacing:1px">${res}</b> · ตัวเลขที่ไฮไลต์คือเลขที่ออก</div></div>`+lastEv.map(e=>card(e,res)).join(''); }
+    body+=`<p class="px sub" style="margin-top:10px;line-height:1.6">ดึงจาก Facebook และ TikTok โดยตรงไม่ได้ จึงเก็บจากข่าวที่รายงานกระแสโซเชียล · ได้เฉพาะกระแสที่ดังจนเป็นข่าว</p>`;
+  }
   return `<header class="top"><div><h1>เลขจากสำนัก</h1><div class="sub">Popular Numbers</div></div>${REAL_PILL}</header>
   <div class="px" style="margin-top:8px">${seg('digits',DIG)}</div>
   <div class="px mt">${tabs('popView',[['nums','เลขงวดนี้'],['sources','รายชื่อสำนัก'],['events','เหตุการณ์และกระแส']])}</div>

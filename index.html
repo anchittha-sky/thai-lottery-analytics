@@ -693,8 +693,8 @@ function pageMyHistory(){
   </section>
   ${alert?`<section class="px mt" style="border:2px solid #FF6B6B;background:rgba(255,107,107,.12);border-radius:16px;padding:14px">
       <div style="color:#FF8A8A;font-weight:700;font-size:16px">⚠️ แจ้งเตือน: เลข ${dg} ในหลักหน่วยหายไป ${streak} งวดติดต่อกันแล้ว</div>
-      <div class="sub" style="margin-top:8px">5 งวดล่าสุด</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${MY_ALL.slice(-5).reverse().map(r=>`<span style="border:1px solid var(--line);border-radius:8px;padding:4px 8px;text-align:center"><span class="sub" style="font-size:10px;display:block">${thDate(r.date)}</span><span class="num" style="font-size:16px;letter-spacing:1px">${r.nums[0].slice(0,3)}<span style="color:#FF8A8A">${r.nums[0][3]}</span></span></span>`).join('')}</div>
+      <div class="sub" style="margin-top:8px">12 งวดล่าสุด</div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px">${MY_ALL.slice(-12).reverse().map(r=>`<span style="border:1px solid var(--line);border-radius:8px;padding:4px 2px;text-align:center"><span class="sub" style="font-size:10px;display:block;white-space:nowrap">${thDate(r.date)}</span><span class="num" style="font-size:16px;letter-spacing:1px">${r.nums[0].slice(0,3)}<span style="color:#FF8A8A">${r.nums[0][3]}</span></span></span>`).join('')}</div>
     </section>`
   :`<section class="card px mt"><div style="font-weight:700;color:#7FE0A8">ยังไม่ถึงเกณฑ์แจ้งเตือน</div><div class="sub" style="margin-top:6px">เลข ${dg} ในหลักหน่วยหายไป ${streak} งวด (ตั้งไว้ ${n} งวด)</div></section>`}
   <div class="note px" style="margin-top:10px;line-height:1.6">จากผลจริง ${st.total.toLocaleString()} งวด: เงื่อนไขนี้ (เลข ${dg} หาย ${n} งวดขึ้นไป) เกิดขึ้น ${pct(st.on,st.total)} ของงวดทั้งหมด · หลังเกิดเงื่อนไข งวดถัดไปเลข ${dg} ออกที่หลักหน่วย ${pct(st.nextHit,st.nextN)} เทียบกับปกติทุกงวด ${pct(st.hit,st.total)} — เลขที่หายนานไม่ได้มีโอกาสออกมากขึ้น</div>

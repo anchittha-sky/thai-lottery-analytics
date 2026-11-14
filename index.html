@@ -131,9 +131,10 @@ const UNI={};
 function universe(d){ d=d||S.digits; if(UNI[d]) return UNI[d]; const n=d==='2'?100:1000, w=d==='2'?2:3; return UNI[d]=Array.from({length:n},(_,i)=>String(i).padStart(w,'0')); }
 const PERM={};
 function permSet(n){ if(PERM[n]) return PERM[n]; const out=new Set(); const go=(pre,rest)=>{ if(!rest.length){out.add(pre);return;} for(let i=0;i<rest.length;i++) go(pre+rest[i],rest.slice(0,i)+rest.slice(i+1)); }; go('',n); return PERM[n]=out; }
-function periodDraws(){
-  if(S.period==='all') return ALL;
-  const yrs={'1y':1,'5y':5,'10y':10}[S.period];
+function periodDraws(per){
+  per=per||S.period;
+  if(per==='all') return ALL;
+  const yrs={'1y':1,'5y':5,'10y':10}[per];
   const [y,m,d]=LATEST.date.split('-').map(Number);
   const cut=String(y-yrs)+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   return ALL.filter(r=>r.date>cut);
@@ -162,7 +163,9 @@ function statScores(seq,d){
   for(let i=1;i<win.length;i++){ const ps=new Set(win[i-1]); if([...win[i]].some(c=>ps.has(c))) ob++; ex+=shareFrac(win[i-1],d); }
   const lift = ex? ob/ex : 1;
   const prev=seq[seq.length-1]; const ps=new Set(prev);
-  const rr={}; U.forEach(n=>rr[n]=new Set([...n].filter(c=>ps.has(c))).size*lift);
+  const prevKey=[...prev].sort().join('');
+  // เลขที่เหมือนงวดล่าสุดทั้งชุด (ตัวเดิมหรือสลับตำแหน่ง) ไม่ได้คะแนนปัจจัยนี้ ให้เฉพาะเลขที่มีตัวเลขร่วมบางตัว
+  const rr={}; U.forEach(n=>rr[n]=([...n].sort().join('')===prevKey)?0:new Set([...n].filter(c=>ps.has(c))).size*lift);
   const rmax=Math.max(...U.map(n=>rr[n]))||1; const rel={}; U.forEach(n=>rel[n]=rr[n]/rmax*100);
   const tw=w.y10+w.y15+w.pattern+w.relation||1;
   const out={};
@@ -179,13 +182,16 @@ function stats(){
   P.forEach(r=>{cnt[r[k]]++;});
   ALL.forEach((r,i)=>{lastIdx[r[k]]=i;});
   const max=Math.max(...U.map(n=>cnt[n]));
-  const sc=statScores(P.map(r=>r[k]), S.digits);
+  // เลข 3 ตัวมี 1,000 แบบ ข้อมูล 1 ปี (24 งวด) น้อยเกินไป คะแนนจึงใช้อย่างน้อย 5 ปีเสมอ
+  const scoreMin5 = S.digits==='3' && S.period==='1y';
+  const SP = scoreMin5 ? periodDraws('5y') : P;
+  const sc=statScores(SP.map(r=>r[k]), S.digits);
   const rows=U.map(n=>{
     const li=lastIdx[n]; let permCnt=0; const ps=permSet(n); P.forEach(r=>{ if(ps.has(r[k])) permCnt++; });
     return { n, count:cnt[n], rate:cnt[n]/P.length, permCnt, score: sc.rows[n].score, f: sc.rows[n],
       last: li===undefined?null:ALL[li].date, gap: li===undefined?null:(ALL.length-1-li) };
   });
-  return CACHE[ck]={rows,P,max,lift:sc.lift};
+  return CACHE[ck]={rows,P,max,lift:sc.lift,scoreMin5,SPn:SP.length};
 }
 function emptyState(title,msg){ return `<div class="card px" style="margin-top:12px;text-align:center;padding:22px 16px"><div style="font-weight:700;margin-bottom:6px">${title}</div><div class="sub" style="line-height:1.6">${msg}</div></div>`; }
 const REAL_PILL='<span class="pill" style="background:#7FE0A8">ข้อมูลจริง</span>';
@@ -275,11 +281,12 @@ function pageHome(){
     <div class="grid2" style="margin-top:12px">
       ${[['3','เลข 3 ตัว'],['2','เลข 2 ตัว']].map(([d,l])=>{const t=topFor(d);return `<div style="background:var(--bg);border-radius:12px;padding:12px"><div class="sub">${l}</div><div class="num" style="font-size:34px;color:var(--gold);line-height:1.2">${t.top[0].n}</div><div class="sub" style="margin-top:4px">อันดับ 2–3: <b class="num" style="color:#fff;letter-spacing:1px">${t.top[1].n} · ${t.top[2].n}</b></div></div>`;}).join('')}
     </div>
-    <div class="sub" style="margin-top:10px;line-height:1.6">${topFor('2').src} · ${PERNAME[S.period]} · คะแนนสูงสุดจากสูตร ไม่ใช่โอกาสถูกรางวัล</div>
+    <div class="sub" style="margin-top:10px;line-height:1.6">${topFor('2').src} · ${PERNAME[S.period]}${S.period==='1y'?' (เลข 3 ตัวใช้ข้อมูล 5 ปี)':''} · คะแนนสูงสุดจากสูตร ไม่ใช่โอกาสถูกรางวัล</div>
   </section>
   <div class="px mt">${seg('digits',DIG)}</div>
   <div class="px" style="margin-top:12px">${chips('period',PER)}</div>
   <div class="px sub" style="margin-top:8px">ช่วงข้อมูลที่ใช้คำนวณ: ${PERNAME[S.period]} · ${st.P.length} งวด · ${thDate(st.P[0].date)} – ${thDate(LATEST.date)}</div>
+  ${st.scoreMin5?`<div class="px" style="margin-top:6px;font-size:12px;color:var(--gold);line-height:1.6">ข้อมูล 1 ปีน้อยเกินไปสำหรับเลข 3 ตัว (1,000 แบบ) คะแนนจึงคำนวณจากข้อมูล 5 ปี (${st.SPn} งวด) · ตัวเลขจำนวนครั้งยังแสดงตามช่วง 1 ปี</div>`:''}
   <div class="px mt">${tabs('group',[['stat','สถิติ'],['pop','สำนัก'],['combined','วิเคราะห์รวม']])}</div>
   <div class="px" style="margin-top:14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>${info[0]}</h2><span class="sub">${info[1]}</span></div>
   ${list}
@@ -520,11 +527,11 @@ function myScores(draws){
     total = win.length*3;
     for(let i=0;i<10000;i++){ const k=MY_FK[j][i]; pr[i]+=(((obs[k]||0)/total)/(MY_FSIZE[j][k]/10000))/FEATS.length; } });
   let pmn=Infinity,pmx=-Infinity; for(let i=0;i<10000;i++){ if(pr[i]<pmn) pmn=pr[i]; if(pr[i]>pmx) pmx=pr[i]; }
-  const pm=MY_MASK[+draws[draws.length-1].nums[0]];
+  const prevN=draws[draws.length-1].nums[0], pm=MY_MASK[+prevN], prevKey=[...prevN].sort().join('');
   const tw=w.y10+w.y15+w.pattern+w.relation||1;
   const sc=new Float64Array(10000);
   for(let i=0;i<10000;i++){
-    const rel=popc(MY_MASK[i]&pm)/4*100;
+    const rel=([...MY_U[i]].sort().join('')===prevKey)?0:popc(MY_MASK[i]&pm)/4*100;
     const pat=pmx===pmn?50:(pr[i]-pmn)/(pmx-pmn)*100;
     sc[i]=Math.round((w.y10*L.c[i]/L.m*100 + w.y15*M.c[i]/M.m*100 + w.pattern*pat + w.relation*rel)/tw*10)/10; }
   return {sc, cLong:L.c, cMid:M.c};

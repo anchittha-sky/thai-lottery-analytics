@@ -83,7 +83,7 @@ const DATA = window.TLA_DATA;
 const DRAWS = DATA.draws;
 const NEXT_DRAW_ISO = DATA.nextDraw;
 const NEXT_ISO = NEXT_DRAW_ISO;
-const S = { game:'th', page:'home', digits:'2', group:'stat',showTies:false,openHist:'',btReady:false,period:'10y', list:'hot', popView:'nums', status:'all', mode:'exact', pick:null,
+const S = { myDigit:'3', myN:5, game:'th', page:'home', digits:'2', group:'stat',showTies:false,openHist:'',btReady:false,period:'10y', list:'hot', popView:'nums', status:'all', mode:'exact', pick:null,
   w:{y10:15,y15:20,pattern:15,relation:10,source:20,trend:20} };
 
 const POOLS = {
@@ -663,15 +663,60 @@ function pageMyPerf(){
 
 const PAGES={home:pageHome,detail:pageDetail,stat:pageStat,pop:pagePop,perf:pagePerf,admin:pageAdmin};
 const NAV=[['home','ภาพรวม','home'],['stat','สถิติ','stat'],['pop','สำนัก','pop'],['perf','โมเดล','perf'],['admin','Admin','admin']];
-const MY_PAGES={home:pageMyHome,detail:pageMyDetail,stat:pageMyStat,perf:pageMyPerf,admin:pageAdmin};
+// ===== หวยมาเลย์: ผลรางวัลที่ 1 ย้อนหลัง 50 งวด แยกหลัก + แจ้งเตือนเลขที่หายจากหลักหน่วย =====
+function myUnitStreak(digit){ let s=0; for(let i=MY_ALL.length-1;i>=0 && MY_ALL[i].nums[0][3]!==digit;i--) s++; return s; }
+const MY_ALERT_STATS={};
+function myAlertStats(digit,n){
+  const k=digit+'_'+n; if(MY_ALERT_STATS[k]) return MY_ALERT_STATS[k];
+  let streak=0,on=0,nextN=0,nextHit=0,hit=0;
+  MY_ALL.forEach(r=>{ const u=r.nums[0][3]; if(streak>=n){ nextN++; if(u===digit) nextHit++; } if(u===digit){ hit++; streak=0; } else streak++; if(streak>=n) on++; });
+  return MY_ALERT_STATS[k]={total:MY_ALL.length,on,nextN,nextHit,hit};
+}
+function pageMyHistory(){
+  const dg=S.myDigit, n=S.myN, streak=myUnitStreak(dg), alert=streak>=n, st=myAlertStats(dg,n);
+  const last50=MY_ALL.slice(-50).reverse();
+  const pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+  const cell=(v,hl)=>`<td style="text-align:center;padding:9px 0;font-family:'Chakra Petch',sans-serif;font-size:20px;font-weight:700;${hl?'background:var(--gold);color:var(--bg);border-radius:8px':''}">${v}</td>`;
+  return topHeader('หวยมาเลย์','Magnum 4D · รางวัลที่ 1 ย้อนหลัง').replace('<span class="pill">ข้อมูลตัวอย่าง</span>',REAL_PILL) + `
+  <section class="card px">
+    <div style="font-weight:700">ตั้งแจ้งเตือนหลักหน่วย</div>
+    <div class="sub" style="margin-top:10px">เลขที่ต้องการติดตาม</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px">${[...'0123456789'].map(d=>`<button onclick="set({myDigit:'${d}'})" style="min-height:44px;border-radius:10px;font-family:'Chakra Petch',sans-serif;font-size:20px;font-weight:700;border:1px solid ${d===dg?'var(--gold)':'var(--line)'};background:${d===dg?'var(--gold)':'transparent'};color:${d===dg?'var(--bg)':'#fff'}">${d}</button>`).join('')}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px">
+      <span class="sub">แจ้งเตือนเมื่อหายไปติดต่อกัน</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <button aria-label="ลดจำนวนงวด" onclick="set({myN:Math.max(2,S.myN-1)})" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:transparent;color:#fff;font-size:22px">−</button>
+        <b style="min-width:64px;text-align:center">${n} งวด</b>
+        <button aria-label="เพิ่มจำนวนงวด" onclick="set({myN:Math.min(30,S.myN+1)})" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:transparent;color:#fff;font-size:22px">+</button>
+      </span>
+    </div>
+  </section>
+  ${alert?`<section class="px mt" style="border:2px solid #FF6B6B;background:rgba(255,107,107,.12);border-radius:16px;padding:14px">
+      <div style="color:#FF8A8A;font-weight:700;font-size:16px">⚠️ แจ้งเตือน: เลข ${dg} ในหลักหน่วยหายไป ${streak} งวดติดต่อกันแล้ว</div>
+      <div class="sub" style="margin-top:8px">5 งวดล่าสุด</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${MY_ALL.slice(-5).reverse().map(r=>`<span style="border:1px solid var(--line);border-radius:8px;padding:4px 8px;text-align:center"><span class="sub" style="font-size:10px;display:block">${thDate(r.date)}</span><span class="num" style="font-size:16px;letter-spacing:1px">${r.nums[0].slice(0,3)}<span style="color:#FF8A8A">${r.nums[0][3]}</span></span></span>`).join('')}</div>
+    </section>`
+  :`<section class="card px mt"><div style="font-weight:700;color:#7FE0A8">ยังไม่ถึงเกณฑ์แจ้งเตือน</div><div class="sub" style="margin-top:6px">เลข ${dg} ในหลักหน่วยหายไป ${streak} งวด (ตั้งไว้ ${n} งวด)</div></section>`}
+  <div class="note px" style="margin-top:10px;line-height:1.6">จากผลจริง ${st.total.toLocaleString()} งวด: เงื่อนไขนี้ (เลข ${dg} หาย ${n} งวดขึ้นไป) เกิดขึ้น ${pct(st.on,st.total)} ของงวดทั้งหมด · หลังเกิดเงื่อนไข งวดถัดไปเลข ${dg} ออกที่หลักหน่วย ${pct(st.nextHit,st.nextN)} เทียบกับปกติทุกงวด ${pct(st.hit,st.total)} — เลขที่หายนานไม่ได้มีโอกาสออกมากขึ้น</div>
+  <div class="px" style="margin-top:18px;display:flex;justify-content:space-between;align-items:baseline"><h2>ย้อนหลัง 50 งวด</h2><span class="sub">ล่าสุด ${dayName(MY_LATEST.date)} ${thDate(MY_LATEST.date)}</span></div>
+  <div class="card px" style="margin-top:10px;padding:6px 10px">
+    <table style="width:100%;border-collapse:separate;border-spacing:0 4px">
+      <tr><th style="text-align:left">วันที่</th><th style="text-align:center">พัน</th><th style="text-align:center">ร้อย</th><th style="text-align:center">สิบ</th><th style="text-align:center">หน่วย</th></tr>
+      ${last50.map(r=>{const v=r.nums[0];return `<tr><td style="padding:9px 0;font-size:12px;color:var(--muted);white-space:nowrap">${thDate(r.date)}</td>${cell(v[0])}${cell(v[1])}${cell(v[2])}${cell(v[3],v[3]===dg)}</tr>`;}).join('')}
+    </table>
+  </div>
+  <p class="px sub" style="margin-top:10px">ช่องสีทอง = หลักหน่วยที่เป็นเลข ${dg} · ข้อมูลอัปเดตอัตโนมัติทุกวัน</p>`;
+}
+
+const MY_PAGES={home:pageMyHistory};
 function render(){
   const y=window.scrollY;
   const my=S.game==='my';
-  const pg = my ? (MY_PAGES[S.page]||pageMyHome) : PAGES[S.page];
+  const pg = my ? pageMyHistory : PAGES[S.page];
   document.getElementById('app').innerHTML = (S.page==='admin'?'':gameBar()) + pg();
   const cur = S.page==='detail'?'home':S.page;
-  const nav = my ? NAV.filter(x=>x[0]!=='pop') : NAV;
-  const el=document.getElementById('nav'); el.style.gridTemplateColumns='repeat('+nav.length+',1fr)';
+  const nav = my ? [] : NAV;
+  const el=document.getElementById('nav'); el.style.display=my?'none':''; el.style.gridTemplateColumns='repeat('+(nav.length||1)+',1fr)';
   el.innerHTML = nav.map(([p,l,i])=>`<button class="${cur===p?'on':''}" onclick="set({page:'${p}'})">${svg(i)}${l}</button>`).join('');
   window.scrollTo(0,y);
 }
